@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 BDE Allocator Benchmarks
 ===
 This repository contains a snapshot of the [BDE libraries](http://github.com/bloomberg/bde), and contains both allocator benchmarking tools and some modifications to the BDE libraries required
@@ -9,6 +8,3 @@ Information about the allocator benchmarking tools is located [here](benchmarks/
 License
 ---
 The BDE libraries and allocator benchmark tools are distributed under the Apache License (version 2.0); see the LICENSE file at the top of the source tree for more information.
-=======
-# Allocator-Benchmarks
->>>>>>> e1e746f15b18f0ee7751d8d6cf7a9ba59f7d50fd
