@@ -30,6 +30,83 @@
 
 using namespace BloombergLP;
 
+template <typename T, typename ALLOC>
+struct alloc_adaptor {
+	typedef T value_type;
+	typedef T& reference;
+	typedef T const& const_reference;
+	ALLOC* alloc;
+	alloc_adaptor() : alloc(nullptr) {}
+	alloc_adaptor(ALLOC* allo) : alloc(allo) {}
+	template <typename T2>
+	alloc_adaptor(alloc_adaptor<T2, ALLOC> other) : alloc(other.alloc) { }
+	T* allocate(size_t sz) {
+		//char volatile* p = (char*)alloc->allocate(sz * sizeof(T));
+		//*p = '\0';																					// TODO: Is this the "writing a null byte" part
+		//return (T*)p;
+		return (T*)alloc->allocate(sz * sizeof(T));
+	}
+	void deallocate(void* p, size_t) { alloc->deallocate(p); }
+};
+
+struct base_types {
+	typedef int in;
+	typedef std::string str;
+	typedef std::vector<int> vec_int;
+	typedef std::vector<std::string> vec_str;
+	typedef std::unordered_set<int> un_int;
+	typedef std::unordered_set<std::string> un_str;
+};
+
+template< typename BASE>
+struct allocators {
+	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bslma::MallocFreeAllocator>> malloc;
+	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialPool>> monotonic;
+	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bdlma::Multipool>> multipool;
+};
+
+template< typename BASE>
+struct containers {
+	typedef std::vector<BASE, allocators::> vec;
+	typedef std::unordered_set<BASE> un;
+};
+
+template< typename ALLOC>
+struct containers {
+	typedef std::vector<int> DS1;
+	typedef std::vector<std::string> DS2;
+	typedef std::unordered_set<int> DS3;
+	typedef std::unordered_set<std::string> DS4;
+	typedef std::vector<std::vector<int>> DS5;
+	typedef std::vector<std::vector<std::string>> DS6;
+	typedef std::vector<std::unordered_set<int>> DS7;
+	typedef std::vector<std::unordered_set<std::string>> DS8;
+	typedef std::unordered_set<std::vector<int>> DS9;
+	typedef std::unordered_set<std::vector<std::string>> DS10;
+	typedef std::unordered_set<std::unordered_set<int>> DS11;
+	typedef std::unordered_set<std::unordered_set<std::string>> DS12;
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 static const int max_problem_logsize = 30;
 
 void usage(char const* cmd, int result)
