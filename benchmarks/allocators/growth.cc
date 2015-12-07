@@ -32,6 +32,17 @@
 using namespace BloombergLP;
 
 
+// Chandler Carruth's Optimizer-Defeating Magic
+void escape(void* p)
+{
+	asm volatile("" : : "g"(p) : "memory");
+}
+
+void clobber()
+{
+	asm volatile("" : : : "memory");
+}
+
 // TODO will this hashing algorithm cause issues?
 template <typename T>
 struct hash {
@@ -98,6 +109,7 @@ struct allocators {
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::malloc> malloc;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::monotonic> monotonic;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::multipool> multipool;
+	typedef std::scoped_allocator_adaptor<bsl::allocator<BASE>> polymorphic;
 };
 
 template<typename CONTAINER, typename BASE>
@@ -139,12 +151,42 @@ struct alloc_containers {
 	typedef std::unordered_set<std::unordered_set<std::string>, hash<std::unordered_set<std::string>>, std::equal_to<std::unordered_set<std::string>>, ALLOC> DS12;
 };
 
-int main(int argc, char *argv[]) { 
-	alloc_containers<nested_allocators<base_containers::DS12, base_types::DS12>::malloc>::DS12 ds12;
-	std::cout << ds12.size();
+template<typename DS1>
+struct process_DS1 {
+	void operator() (DS1 &ds1, unsigned long long elements) {
+		escape(&ds1);
+		for (unsigned long long i = 0; i < elements; i++) {
+			ds1.emplace_back((int)i);
+		}
+		clobber();
+	}
+};
 
+
+template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
+static void run_base_allocations(unsigned long long iterations, unsigned long long elements) {
+
+	PROCESSER<GLOBAL_CONT> processer;
+	for (unsigned long long i = 0; i < iterations; i++) {
+		GLOBAL_CONT container;
+		container.reserve(elements);
+		processer(container, elements);
+	}
 }
 
+
+int main(int argc, char *argv[]) { 
+	alloc_containers<nested_allocators<base_containers::DS12, base_types::DS12>::malloc>::DS12 ds12;
+	std::cout << "asdf";
+
+	run_base_allocations<typename alloc_containers<allocators<base_types::DS1>::malloc>::DS1,
+						 typename alloc_containers<allocators<base_types::DS1>::monotonic>::DS1,
+						 typename alloc_containers<allocators<base_types::DS1>::multipool>::DS1,
+						 typename alloc_containers<allocators<base_types::DS1>::polymorphic>::DS1,
+						 process_DS1>
+		(5, 5);
+
+}
 
 
 
