@@ -4,6 +4,7 @@
 #include <memory>
 #include <random>
 #include <iterator>
+#include <functional>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,16 @@
 
 using namespace BloombergLP;
 
+
+// TODO will this hashing algorithm cause issues?
+template <typename T>
+struct hash {
+	typedef std::size_t result_type;
+	typedef T argument_type;
+	result_type operator()(T obj) { return 0; }
+};
+
+
 template <typename T, typename ALLOC>
 struct alloc_adaptor {
 	typedef T value_type;
@@ -50,28 +61,52 @@ struct alloc_adaptor {
 };
 
 struct base_types {
-	typedef int in;
-	typedef std::string str;
-	typedef std::vector<int> vec_int;
-	typedef std::vector<std::string> vec_str;
-	typedef std::unordered_set<int> un_int;
-	typedef std::unordered_set<std::string> un_str;
+	typedef int DS1;
+	typedef std::string DS2;
+	typedef int DS3;
+	typedef std::string DS4;
+	typedef int DS5;
+	typedef std::string DS6;
+	typedef int DS7;
+	typedef std::string DS8;
+	typedef int DS9;
+	typedef std::string DS10;
+	typedef int DS11;
+	typedef std::string DS12;
+};
+
+struct base_containers {
+	typedef std::vector<int> DS5;
+	typedef std::vector<std::string> DS6;
+	typedef std::unordered_set<int> DS7;
+	typedef std::unordered_set<std::string> DS8;
+	typedef std::vector<int> DS9;
+	typedef std::vector<std::string> DS10;
+	typedef std::unordered_set<int> DS11;
+	typedef std::unordered_set<std::string> DS12;
+};
+
+template< typename BASE>
+struct alloc_adaptors {
+	typedef alloc_adaptor<BASE, BloombergLP::bslma::MallocFreeAllocator> malloc;
+	typedef alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialPool> monotonic;
+	typedef alloc_adaptor<BASE, BloombergLP::bdlma::Multipool> multipool;
 };
 
 template< typename BASE>
 struct allocators {
-	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bslma::MallocFreeAllocator>> malloc;
-	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialPool>> monotonic;
-	typedef std::scoped_allocator_adaptor<alloc_adaptor<BASE, BloombergLP::bdlma::Multipool>> multipool;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::malloc> malloc;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::monotonic> monotonic;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::multipool> multipool;
 };
 
-template< typename BASE>
-struct containers {
-	typedef std::vector<BASE, allocators::> vec;
-	typedef std::unordered_set<BASE> un;
+template<typename CONTAINER, typename BASE>
+struct nested_allocators {
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::malloc, typename alloc_adaptors<BASE>::malloc> malloc;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::monotonic, typename alloc_adaptors<BASE>::monotonic> monotonic;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::multipool, typename alloc_adaptors<BASE>::multipool> multipool;
 };
 
-template< typename ALLOC>
 struct containers {
 	typedef std::vector<int> DS1;
 	typedef std::vector<std::string> DS2;
@@ -88,17 +123,27 @@ struct containers {
 };
 
 
+template< typename ALLOC>
+struct alloc_containers {
+	typedef std::vector<int, ALLOC> DS1;
+	typedef std::vector<std::string, ALLOC> DS2;
+	typedef std::unordered_set<int, hash<int>, std::equal_to<int>, ALLOC> DS3;
+	typedef std::unordered_set<std::string, hash<std::string>, std::equal_to<std::string>, ALLOC> DS4;
+	typedef std::vector<std::vector<int>> DS5;
+	typedef std::vector<std::vector<std::string>> DS6;
+	typedef std::vector<std::unordered_set<int, hash<int>, std::equal_to<int>, ALLOC>> DS7;
+	typedef std::vector<std::unordered_set<std::string, hash<std::string>, std::equal_to<std::string>, ALLOC>> DS8;
+	typedef std::unordered_set<std::vector<int>, hash<std::vector<int>>, std::equal_to<std::vector<int>>, ALLOC> DS9;
+	typedef std::unordered_set<std::vector<std::string>, hash<std::vector<std::string>>, std::equal_to<std::vector<std::string>>, ALLOC> DS10;
+	typedef std::unordered_set<std::unordered_set<int>, hash<std::unordered_set<int>>, std::equal_to<std::unordered_set<int>>, ALLOC> DS11;
+	typedef std::unordered_set<std::unordered_set<std::string>, hash<std::unordered_set<std::string>>, std::equal_to<std::unordered_set<std::string>>, ALLOC> DS12;
+};
 
+int main(int argc, char *argv[]) { 
+	alloc_containers<nested_allocators<base_containers::DS12, base_types::DS12>::malloc>::DS12 ds12;
+	std::cout << ds12.size();
 
-
-
-
-
-
-
-
-
-
+}
 
 
 
@@ -705,42 +750,42 @@ void apply_containers(int runs, int split, bool csv)
 }
 
 
-int main(int ac, char** av)
-{
-    std::ios::sync_with_stdio(false);
-    if (ac != 3 && ac != 4)
-        usage(*av, 1);
-    int logsize = atoi(av[1]);
-    int logsplit = atoi(av[2]);
-    if (logsize < 1 || logsize > max_problem_logsize)
-        usage(*av, 2);
-    if (logsplit < 1 || logsplit > logsize)
-        usage(*av, 3);
-    bool csv = (ac == 4);
-
-    if (!csv) {
-        std::cout << "Total # of objects = 2^" << logsize
-                  << ", # elements per container = 2^" << logsplit
-                  << ", # rounds = 2^" << logsize - logsplit << "\n";
-    }
-
-    int size = 1 << logsize;
-    int split = 1 << logsplit;
-    int runs = size / split;
-
-    std::uniform_int_distribution<char> char_dist('!', '~');
-    for (char& c : trash)
-        c = char_dist(random_engine);
-
-    // The actual storage
-    memset(pool, 1, sizeof(pool));  // Fault in real memory
-
-    std::cout << std::setprecision(3);
-
-    apply_containers(runs, split, csv);
-
-    return 0;
-}
+//int main(int ac, char** av)
+//{
+//    std::ios::sync_with_stdio(false);
+//    if (ac != 3 && ac != 4)
+//        usage(*av, 1);
+//    int logsize = atoi(av[1]);
+//    int logsplit = atoi(av[2]);
+//    if (logsize < 1 || logsize > max_problem_logsize)
+//        usage(*av, 2);
+//    if (logsplit < 1 || logsplit > logsize)
+//        usage(*av, 3);
+//    bool csv = (ac == 4);
+//
+//    if (!csv) {
+//        std::cout << "Total # of objects = 2^" << logsize
+//                  << ", # elements per container = 2^" << logsplit
+//                  << ", # rounds = 2^" << logsize - logsplit << "\n";
+//    }
+//
+//    int size = 1 << logsize;
+//    int split = 1 << logsplit;
+//    int runs = size / split;
+//
+//    std::uniform_int_distribution<char> char_dist('!', '~');
+//    for (char& c : trash)
+//        c = char_dist(random_engine);
+//
+//    // The actual storage
+//    memset(pool, 1, sizeof(pool));  // Fault in real memory
+//
+//    std::cout << std::setprecision(3);
+//
+//    apply_containers(runs, split, csv);
+//
+//    return 0;
+//}
 
 // ----------------------------------------------------------------------------
 // Copyright 2015 Bloomberg Finance L.P.
