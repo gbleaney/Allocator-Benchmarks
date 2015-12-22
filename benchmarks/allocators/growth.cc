@@ -5,6 +5,7 @@
 #include <random>
 #include <iterator>
 #include <functional>
+#include <ctime>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,9 @@
 #include <unordered_set>
 #include <scoped_allocator>
 #include "allocont.h"
+
+// Debugging
+#include <typeinfo>
 
 using namespace BloombergLP;
 
@@ -99,14 +103,14 @@ struct base_containers {
 
 template< typename BASE>
 struct alloc_adaptors {
-	typedef alloc_adaptor<BASE, BloombergLP::bslma::MallocFreeAllocator> malloc;
+	typedef alloc_adaptor<BASE, BloombergLP::bslma::NewDeleteAllocator> newdel;
 	typedef alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialPool> monotonic;
 	typedef alloc_adaptor<BASE, BloombergLP::bdlma::Multipool> multipool;
 };
 
 template< typename BASE>
 struct allocators {
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::malloc> malloc;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::newdel> newdel;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::monotonic> monotonic;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::multipool> multipool;
 	typedef std::scoped_allocator_adaptor<bsl::allocator<BASE>> polymorphic;
@@ -114,7 +118,7 @@ struct allocators {
 
 template<typename CONTAINER, typename BASE>
 struct nested_allocators {
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::malloc, typename alloc_adaptors<BASE>::malloc> malloc;
+	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::newdel, typename alloc_adaptors<BASE>::newdel> newdel;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::monotonic, typename alloc_adaptors<BASE>::monotonic> monotonic;
 	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::multipool, typename alloc_adaptors<BASE>::multipool> multipool;
 };
@@ -167,25 +171,44 @@ template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename
 static void run_base_allocations(unsigned long long iterations, unsigned long long elements) {
 
 	PROCESSER<GLOBAL_CONT> processer;
+	std::clock_t c_start = std::clock();
 	for (unsigned long long i = 0; i < iterations; i++) {
 		GLOBAL_CONT container;
-		container.reserve(elements);
+		container.reserve((size_t)elements); // TODO calculate sizes
 		processer(container, elements);
 	}
+	std::clock_t c_end = std::clock();
+	std::cout << c_end - c_start;
 }
 
 
-int main(int argc, char *argv[]) { 
-	alloc_containers<nested_allocators<base_containers::DS12, base_types::DS12>::malloc>::DS12 ds12;
-	std::cout << "asdf";
+int main(int argc, char *argv[]) {
+	std::cout << "Started" << std::endl;
 
-	run_base_allocations<typename alloc_containers<allocators<base_types::DS1>::malloc>::DS1,
+	//BloombergLP::bslma::NewDeleteAllocator newalloc;
+	//newalloc.allocate((size_t)1);
+
+	//alloc_adaptor<int, BloombergLP::bslma::NewDeleteAllocator> adapted_newalloc;
+	////auto ptr = adapted_newalloc.allocate((size_t)1);
+
+	//allocators<base_types::DS1>::newdel alloc;
+	////alloc.allocate((size_t)1);
+
+	//alloc_containers<allocators<base_types::DS1>::newdel>::DS1 ds1(&newalloc);
+	//ds1.reserve(1);
+
+	//std::cout << typeid(alloc).name() << std::endl;
+	//std::cout << typeid(newalloc).name() << std::endl;
+	//std::cout << typeid(adapted_newalloc).name() << std::endl;
+
+	run_base_allocations<typename containers::DS1,
 						 typename alloc_containers<allocators<base_types::DS1>::monotonic>::DS1,
 						 typename alloc_containers<allocators<base_types::DS1>::multipool>::DS1,
 						 typename alloc_containers<allocators<base_types::DS1>::polymorphic>::DS1,
 						 process_DS1>
 		(5, 5);
 
+	std::cout << "Done" << std::endl;
 }
 
 
