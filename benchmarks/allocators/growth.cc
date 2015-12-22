@@ -35,6 +35,10 @@
 
 using namespace BloombergLP;
 
+// Global Variables
+
+alignas(long long) static char pool[1 << 30];
+
 
 // Chandler Carruth's Optimizer-Defeating Magic
 void escape(void* p)
@@ -47,7 +51,7 @@ void clobber()
 	asm volatile("" : : : "memory");
 }
 
-// TODO will this hashing algorithm cause issues?
+// TODO will this hashing algorithm cause issues? Maybe just a singleton counter?
 template <typename T>
 struct hash {
 	typedef std::size_t result_type;
@@ -74,6 +78,9 @@ struct alloc_adaptor {
 	}
 	void deallocate(void* p, size_t) { alloc->deallocate(p); }
 };
+
+
+// Convenience Typedefs
 
 struct base_types {
 	typedef int DS1;
@@ -104,8 +111,8 @@ struct base_containers {
 template< typename BASE>
 struct alloc_adaptors {
 	typedef alloc_adaptor<BASE, BloombergLP::bslma::NewDeleteAllocator> newdel;
-	typedef alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialPool> monotonic;
-	typedef alloc_adaptor<BASE, BloombergLP::bdlma::Multipool> multipool;
+	typedef alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialAllocator> monotonic;
+	typedef alloc_adaptor<BASE, BloombergLP::bdlma::MultipoolAllocator> multipool;
 };
 
 template< typename BASE>
@@ -157,10 +164,10 @@ struct alloc_containers {
 
 template<typename DS1>
 struct process_DS1 {
-	void operator() (DS1 &ds1, unsigned long long elements) {
-		escape(&ds1);
-		for (unsigned long long i = 0; i < elements; i++) {
-			ds1.emplace_back((int)i);
+	void operator() (DS1 *ds1, size_t elements) {
+		escape(ds1);
+		for (size_t i = 0; i < elements; i++) {
+			ds1->emplace_back((int)i);
 		}
 		clobber();
 	}
@@ -168,17 +175,217 @@ struct process_DS1 {
 
 
 template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
-static void run_base_allocations(unsigned long long iterations, unsigned long long elements) {
+static void run_base_allocations(unsigned long long iterations, size_t elements) {
+	// TODO: 
+	// 1) Assert allocation size << sizeof(pool)
+	// 2) Does dereferencing container in "wink" sections in order to pass to processor have a negative effect?
+	// 3) Does switching from buffered sequential allocator to pool make any differance?
+	// 4) Is it really fair that, monotonic has one big chunk handed to it, but multipool grows organically?
+	// 5) What is the point of backing a monotonic with a multipool if we already supply it with enough initial memory?
 
-	PROCESSER<GLOBAL_CONT> processer;
-	std::clock_t c_start = std::clock();
-	for (unsigned long long i = 0; i < iterations; i++) {
-		GLOBAL_CONT container;
-		container.reserve((size_t)elements); // TODO calculate sizes
-		processer(container, elements);
+	std::clock_t c_start;
+	std::clock_t c_end;
+
+	// AS1 - Global Default
+	{
+		PROCESSER<GLOBAL_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			GLOBAL_CONT container;
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
 	}
-	std::clock_t c_end = std::clock();
-	std::cout << c_end - c_start;
+
+	// AS2 - Global Default with Virtual
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bslma::NewDeleteAllocator alloc;
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS3 - Monotonic
+	{
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+			MONO_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS4 - Monotonic with wink
+	{
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+			MONO_CONT* container = new(alloc) MONO_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS5 - Monotonic with Virtual
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS6 - Monotonic with Virtual and Wink
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS7 - Multipool
+	{
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			MULTI_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS8 - Multipool with wink
+	{
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS9 - Multipool with Virtual
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS10 - Multipool with Virtual and Wink
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS11 - Monotonic + Multipool
+	{
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			MONO_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS12 - Monotonic + Multipool with wink
+	{
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			MONO_CONT* container = new(alloc) MONO_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS13 - Monotonic + Multipool with Virtual
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	// AS14 - Monotonic + Multipool with Virtual and Wink
+	{
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
+		}
+		c_end = std::clock();
+		std::cout << c_end - c_start << "\t";
+	}
+
+	std::cout << std::endl;
 }
 
 
@@ -200,6 +407,7 @@ int main(int argc, char *argv[]) {
 	//std::cout << typeid(alloc).name() << std::endl;
 	//std::cout << typeid(newalloc).name() << std::endl;
 	//std::cout << typeid(adapted_newalloc).name() << std::endl;
+
 
 	run_base_allocations<typename containers::DS1,
 						 typename alloc_containers<allocators<base_types::DS1>::monotonic>::DS1,
@@ -254,8 +462,6 @@ struct range {
 };
 
 char trash[1 << 16];  // random characters to construct string keys from
-
-alignas(long long) static char pool[1 << 30];
 
 std::default_random_engine random_engine;
 std::uniform_int_distribution<int> pos_dist(0, sizeof(trash) - 1000);
