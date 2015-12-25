@@ -15,9 +15,9 @@ AR = llvm-ar-3.6
 RANLIB = llvm-ranlib-3.6
 BDEWAF = waf
 
-OPTIM = -O3 -DBSLS_ASSERT_LEVEL_NONE
+OPTIM = #-O3 -DBSLS_ASSERT_LEVEL_NONE # TODO: Change back
 LTO =
-DEBUG = 
+DEBUG = -g # TODO: Remove
 PARALLEL = 
 GROWTH_SIZE = 20  # use 16 or less for testing
 
@@ -93,7 +93,7 @@ bde-tag: Makefile
 	touch bde-tag
 
 # section 7
-growth: growth.cc allocont.h bde-tag
+growth: growth.cc bde-tag
 	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
 
 growth-DS159long: growth-DS159long.cc allocont.h bde-tag

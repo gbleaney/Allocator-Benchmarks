@@ -10,3 +10,6 @@ ENV PATH /opt/bb/bde-tools/bin:$PATH
 # and Debian does not provide a configurable 'alternative' to select it as the
 # system linker, so the symlink in /usr/bin must be replaced to activate it.
 RUN ln -sf /usr/bin/ld.gold /usr/bin/ld
+
+# Make ps avaliable
+apt-get update -y && apt-get install procps -y
