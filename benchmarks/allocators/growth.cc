@@ -182,35 +182,49 @@ struct string {
 struct containers {
 	typedef std::vector<int> DS1;
 	typedef std::vector<std::string> DS2;
-	typedef std::unordered_set<int> DS3;
-	typedef std::unordered_set<std::string> DS4;
-	typedef std::vector<std::vector<int>> DS5;
-	typedef std::vector<std::vector<std::string>> DS6;
-	typedef std::vector<std::unordered_set<int>> DS7;
-	typedef std::vector<std::unordered_set<std::string>> DS8;
-	typedef std::unordered_set<std::vector<int>> DS9;
-	typedef std::unordered_set<std::vector<std::string>> DS10;
-	typedef std::unordered_set<std::unordered_set<int>> DS11;
-	typedef std::unordered_set<std::unordered_set<std::string>> DS12;
+	typedef std::unordered_set<int, hash<int>> DS3;
+	typedef std::unordered_set<std::string, hash<std::string>> DS4;
+	typedef std::vector<DS1> DS5;
+	typedef std::vector<DS2> DS6;
+	typedef std::vector<DS3> DS7;
+	typedef std::vector<DS4> DS8;
+	typedef std::unordered_set<DS1, hash<DS1>> DS9;
+	typedef std::unordered_set<DS2, hash<DS2>> DS10;
+	typedef std::unordered_set<DS3, hash<DS3>> DS11;
+	typedef std::unordered_set<DS4, hash<DS4>> DS12;
 };
 
 
-template<typename STRING, typename ALLOC>
 struct alloc_containers {
-	typedef std::vector<int, ALLOC> DS1;
-	typedef std::vector<STRING, ALLOC> DS2;
-	typedef std::unordered_set<int, hash<int>, std::equal_to<int>, ALLOC> DS3;
-	typedef std::unordered_set<STRING, hash<STRING>, std::equal_to<STRING>, ALLOC> DS4;
-	typedef std::vector<std::vector<int>> DS5;
-	typedef std::vector<std::vector<STRING>> DS6;
-	typedef std::vector<std::unordered_set<int, hash<int>, std::equal_to<int>, ALLOC>> DS7;
-	typedef std::vector<std::unordered_set<STRING, hash<STRING>, std::equal_to<STRING>, ALLOC>> DS8;
-	typedef std::unordered_set<std::vector<int>, hash<std::vector<int>>, std::equal_to<std::vector<int>>, ALLOC> DS9;
-	typedef std::unordered_set<std::vector<STRING>, hash<std::vector<STRING>>, std::equal_to<std::vector<STRING>>, ALLOC> DS10;
-	typedef std::unordered_set<std::unordered_set<int>, hash<std::unordered_set<int>>, std::equal_to<std::unordered_set<int>>, ALLOC> DS11;
-	typedef std::unordered_set<std::unordered_set<STRING>, hash<std::unordered_set<STRING>>, std::equal_to<std::unordered_set<STRING>>, ALLOC> DS12;
+
+	template<typename ALLOC>
+	using DS1 = std::vector<int, ALLOC>;
+	template<typename STRING, typename ALLOC>
+	using DS2 = std::vector<STRING, ALLOC>;
+	template<typename ALLOC>
+	using DS3 = std::unordered_set<int, hash<int>, std::equal_to<int>, ALLOC>;
+	template<typename STRING, typename ALLOC>
+	using DS4 = std::unordered_set<STRING, hash<STRING>, std::equal_to<STRING>, ALLOC>;
+	template<typename ALLOC, typename INNER_ALLOC>
+	using DS5 = std::vector<DS1<INNER_ALLOC>, ALLOC>;
+	template<typename STRING, typename ALLOC, typename INNER_ALLOC>
+	using DS6 = std::vector<DS2<STRING, INNER_ALLOC>, ALLOC>;
+	template<typename ALLOC, typename INNER_ALLOC>
+	using DS7 = std::vector<DS3<INNER_ALLOC>, ALLOC>;
+	template<typename STRING, typename ALLOC, typename INNER_ALLOC>
+	using DS8 = std::vector<DS4<STRING, INNER_ALLOC>, ALLOC>;
+	template<typename ALLOC, typename INNER_ALLOC>
+	using DS9 = std::unordered_set<DS1<INNER_ALLOC>, hash<DS1<INNER_ALLOC>>, std::equal_to<DS1<INNER_ALLOC>>, ALLOC>;
+	template<typename STRING, typename ALLOC, typename INNER_ALLOC>
+	using DS10 = std::unordered_set<DS2<STRING, INNER_ALLOC>, hash<DS2<STRING, INNER_ALLOC>>, std::equal_to<DS2<STRING, INNER_ALLOC>>, ALLOC>;
+	template<typename ALLOC, typename INNER_ALLOC>
+	using DS11 = std::unordered_set<DS3<INNER_ALLOC>, hash<DS3<INNER_ALLOC>>, std::equal_to<DS3<INNER_ALLOC>>, ALLOC>;
+	template<typename STRING, typename ALLOC, typename INNER_ALLOC>
+	using DS12 = std::unordered_set<DS4<STRING, INNER_ALLOC>, hash<DS4<STRING, INNER_ALLOC>>, std::equal_to<DS4<STRING, INNER_ALLOC>>, ALLOC>;
 };
 
+
+// Functors to exercise the data structures
 template<typename DS1>
 struct process_DS1 {
 	void operator() (DS1 *ds1, size_t elements) {
@@ -228,6 +242,28 @@ struct process_DS2 {
 		escape(ds2);
 		for (size_t i = 0; i < elements; i++) {
 			ds2->emplace_back(&random_data[random_positions[i]], random_lengths[i]);
+		}
+		clobber();
+	}
+};
+
+template<typename DS3>
+struct process_DS3 {
+	void operator() (DS3 *ds3, size_t elements) {
+		escape(ds3);
+		for (size_t i = 0; i < elements; i++) {
+			ds3->emplace((int)i);
+		}
+		clobber();
+	}
+};
+
+template<typename DS4>
+struct process_DS4 {
+	void operator() (DS4 *ds4, size_t elements) {
+		escape(ds4);
+		for (size_t i = 0; i < elements; i++) {
+			ds4->emplace(&random_data[random_positions[i]], random_lengths[i]);
 		}
 		clobber();
 	}
@@ -504,8 +540,17 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 void run_loop(void (*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
-	for (size_t elements = 1 << 6; elements <= 1 << 16; elements <<= 1) {
-		unsigned long long iterations = (1 << 27) / elements;
+#ifdef DEBUG
+	short max_element_exponent = 10;
+	short max_element_iteration_product_exponent = 20;
+#else
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 27;
+#endif // DEBUG
+
+
+	for (size_t elements = 1 << 6; elements <= 1 << max_element_exponent; elements <<= 1) {
+		unsigned long long iterations = (1 << max_element_iteration_product_exponent) / elements;
 		func(iterations, elements);
 	}
 }
@@ -538,65 +583,25 @@ int main(int argc, char *argv[]) {
 
 
 	run_loop(&run_base_allocations<typename containers::DS1,
-		typename alloc_containers<allocators<base_types::DS1>::monotonic>::DS1,
-		typename alloc_containers<allocators<base_types::DS1>::multipool>::DS1,
-		typename alloc_containers<allocators<base_types::DS1>::polymorphic>::DS1,
+		typename alloc_containers::DS1<allocators<int>::monotonic>,
+		typename alloc_containers::DS1<allocators<int>::multipool>,
+		typename alloc_containers::DS1<allocators<int>::polymorphic>,
 		process_DS1>, "**DS1**");
 	run_loop(&run_base_allocations<typename containers::DS2,
-		typename alloc_containers<string::monotonic, allocators<string::monotonic>::monotonic>::DS2,
-		typename alloc_containers<string::multipool, allocators<string::multipool>::multipool>::DS2,
-		typename alloc_containers<string::polymorphic, allocators<string::polymorphic>::polymorphic>::DS2,
+		typename alloc_containers::DS2<string::monotonic, allocators<string::monotonic>::monotonic>,
+		typename alloc_containers::DS2<string::multipool, allocators<string::multipool>::multipool>,
+		typename alloc_containers::DS2<string::polymorphic, allocators<string::polymorphic>::polymorphic>,
 		process_DS2>, "**DS2**");
-	//run_loop(&run_base_allocations<typename containers::DS3,
-	//	typename alloc_containers<allocators<base_types::DS3>::monotonic>::DS3,
-	//	typename alloc_containers<allocators<base_types::DS3>::multipool>::DS3,
-	//	typename alloc_containers<allocators<base_types::DS3>::polymorphic>::DS3,
-	//	process_DS3>, "**DS3**");
-	//run_loop(&run_base_allocations<typename containers::DS4,
-	//	typename alloc_containers<allocators<base_types::DS4>::monotonic>::DS4,
-	//	typename alloc_containers<allocators<base_types::DS4>::multipool>::DS4,
-	//	typename alloc_containers<allocators<base_types::DS4>::polymorphic>::DS4,
-	//	process_DS4>, "**DS4**");
-	//run_loop(&run_base_allocations<typename containers::DS5,
-	//	typename alloc_containers<allocators<base_types::DS5>::monotonic>::DS5,
-	//	typename alloc_containers<allocators<base_types::DS5>::multipool>::DS5,
-	//	typename alloc_containers<allocators<base_types::DS5>::polymorphic>::DS5,
-	//	process_DS5>, "**DS5**");
-	//run_loop(&run_base_allocations<typename containers::DS6,
-	//	typename alloc_containers<allocators<base_types::DS6>::monotonic>::DS6,
-	//	typename alloc_containers<allocators<base_types::DS6>::multipool>::DS6,
-	//	typename alloc_containers<allocators<base_types::DS6>::polymorphic>::DS6,
-	//	process_DS6>, "**DS6**");
-	//run_loop(&run_base_allocations<typename containers::DS7,
-	//	typename alloc_containers<allocators<base_types::DS7>::monotonic>::DS7,
-	//	typename alloc_containers<allocators<base_types::DS7>::multipool>::DS7,
-	//	typename alloc_containers<allocators<base_types::DS7>::polymorphic>::DS7,
-	//	process_DS7>, "**DS7**");
-	//run_loop(&run_base_allocations<typename containers::DS8,
-	//	typename alloc_containers<allocators<base_types::DS8>::monotonic>::DS8,
-	//	typename alloc_containers<allocators<base_types::DS8>::multipool>::DS8,
-	//	typename alloc_containers<allocators<base_types::DS8>::polymorphic>::DS8,
-	//	process_DS8>, "**DS8**");
-	//run_loop(&run_base_allocations<typename containers::DS9,
-	//	typename alloc_containers<allocators<base_types::DS9>::monotonic>::DS9,
-	//	typename alloc_containers<allocators<base_types::DS9>::multipool>::DS9,
-	//	typename alloc_containers<allocators<base_types::DS9>::polymorphic>::DS9,
-	//	process_DS9>, "**DS9**");
-	//run_loop(&run_base_allocations<typename containers::DS10,
-	//	typename alloc_containers<allocators<base_types::DS10>::monotonic>::DS10,
-	//	typename alloc_containers<allocators<base_types::DS10>::multipool>::DS10,
-	//	typename alloc_containers<allocators<base_types::DS10>::polymorphic>::DS10,
-	//	process_DS10>, "**DS10**");
-	//run_loop(&run_base_allocations<typename containers::DS11,
-	//	typename alloc_containers<allocators<base_types::DS11>::monotonic>::DS11,
-	//	typename alloc_containers<allocators<base_types::DS11>::multipool>::DS11,
-	//	typename alloc_containers<allocators<base_types::DS11>::polymorphic>::DS11,
-	//	process_DS11>, "**DS11**");
-	//run_loop(&run_base_allocations<typename containers::DS12,
-	//	typename alloc_containers<allocators<base_types::DS12>::monotonic>::DS12,
-	//	typename alloc_containers<allocators<base_types::DS12>::multipool>::DS12,
-	//	typename alloc_containers<allocators<base_types::DS12>::polymorphic>::DS12,
-	//	process_DS12>, "**DS12**");
+	run_loop(&run_base_allocations<typename containers::DS3,
+		typename alloc_containers::DS3<allocators<int>::monotonic>,
+		typename alloc_containers::DS3<allocators<int>::multipool>,
+		typename alloc_containers::DS3<allocators<int>::polymorphic>,
+		process_DS3>, "**DS3**");
+	run_loop(&run_base_allocations<typename containers::DS4,
+		typename alloc_containers::DS4<string::monotonic, allocators<string::monotonic>::monotonic>,
+		typename alloc_containers::DS4<string::multipool, allocators<string::multipool>::multipool>,
+		typename alloc_containers::DS4<string::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		process_DS4>, "**DS4**");
 
 	std::cout << "Done" << std::endl;
 }
