@@ -36,7 +36,7 @@ using namespace BloombergLP;
 
 // Global Variables
 #define DEBUG
-
+//#define DEBUG_V4
 
 const size_t RANDOM_SIZE = 1000000;
 const size_t RANDOM_DATA_POINTS = 1<<16;
@@ -292,7 +292,7 @@ struct process_DS5 {
 	void operator() (DS5 *ds5, size_t elements) {
 		escape(ds5);
 		for (size_t i = 0; i < elements; i++) {
-			ds5->emplace_back(ds5->get_allocator());
+			ds5->emplace_back();
 			ds5->back().reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
@@ -573,7 +573,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl;
 }
 
-void run_loop(void (*func)(unsigned long long, size_t), std::string header) {
+void run_base_loop(void (*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
 #ifdef DEBUG
 	short max_element_exponent = 10;
@@ -590,25 +590,47 @@ void run_loop(void (*func)(unsigned long long, size_t), std::string header) {
 	}
 }
 
+void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header) {
+	std::cout << header << std::endl;
+#ifdef DEBUG
+	short max_element_exponent = 10;
+	short max_element_iteration_product_exponent = 20 - 7;
+#else
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 27 - 7;
+#endif // DEBUG
+
+
+	for (size_t elements = 1 << 6; elements <= 1 << max_element_exponent; elements <<= 1) {
+		unsigned long long iterations = (1 << max_element_iteration_product_exponent) / elements;
+		func(iterations, elements);
+	}
+}
+
 
 int main(int argc, char *argv[]) {
 	std::cout << "Started" << std::endl;
 
-	std::cout << "Generating random numbers" << std::endl;
+	std::cout << std::endl << "Generating random numbers" << std::endl;
 	fill_random();
 
-	//std::cout << str << std::endl;
-
-	//typedef alloc_adaptor<char, BloombergLP::bdlma::BufferedSequentialAllocator> mono_adaptor_char;
-	//typedef std::basic_string<char, std::char_traits<char>, mono_adaptor_char> mono_string;
-	//typedef alloc_adaptor<mono_string, BloombergLP::bdlma::BufferedSequentialAllocator> mono_adaptor_string;
-	//typedef std::scoped_allocator_adaptor<mono_adaptor_string> mono_allocator;
+	//std::cout << std::endl << "Creating Allocator" << std::endl << std::endl;
 
 	//BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-	//std::vector<mono_string, mono_allocator> container(&alloc);
-	//container.emplace_back("qwer");
-	//std::cout << container[0] << std::endl;
+	//std::cout << std::endl << "Creating outer container" << std::endl << std::endl;
 
+	//typename alloc_containers::DS5<allocators<combined_containers::DS1_mono>::monotonic, allocators<int>::monotonic> container(&alloc);
+
+	//std::cout << std::endl << "Creating inner continer" << std::endl;
+
+	//typename combined_containers::DS1_mono inner(container.get_allocator());
+
+	//std::cout << std::endl << "Emplacing inner container" << std::endl;
+
+	//container.emplace_back();
+
+	//std::cout << std::endl << "Emplacing int" << std::endl;
+	//container[0].emplace_back(1);
 
 	//run_base_allocations<typename containers::DS2,
 	//	typename alloc_containers<nested_allocators<base_types::DS2, base_internal_types::DS2>::monotonic>::DS2,
@@ -617,30 +639,32 @@ int main(int argc, char *argv[]) {
 	//	process_DS2>(2, 2);
 
 
-	run_loop(&run_base_allocations<typename containers::DS1,
-		typename combined_containers::DS1_mono,
-		typename combined_containers::DS1_multi,
-		typename combined_containers::DS1_poly,
-		process_DS1>, "**DS1**");
-	run_loop(&run_base_allocations<typename containers::DS2,
-		typename combined_containers::DS2_mono,
-		typename combined_containers::DS2_multi,
-		typename combined_containers::DS2_poly,
-		process_DS2>, "**DS2**");
-	run_loop(&run_base_allocations<typename containers::DS3,
-		typename combined_containers::DS3_mono,
-		typename combined_containers::DS3_multi,
-		typename combined_containers::DS3_poly,
-		process_DS3>, "**DS3**");
-	run_loop(&run_base_allocations<typename containers::DS4,
-		typename combined_containers::DS4_mono,
-		typename combined_containers::DS4_multi,
-		typename combined_containers::DS4_poly,
-		process_DS4>, "**DS4**");
-	//run_loop(&run_base_allocations<typename containers::DS5,
-	//	typename alloc_containers::DS5<nested_allocators<int>::monotonic, allocators<int>::monotonic>,
-	//	typename alloc_containers::DS5<allocators<int>::multipool>,
-	//	typename alloc_containers::DS5<allocators<int>::polymorphic>,
-	//	process_DS5>, "**DS5**");
+	//run_base_loop(&run_base_allocations<typename containers::DS1,
+	//	typename combined_containers::DS1_mono,
+	//	typename combined_containers::DS1_multi,
+	//	typename combined_containers::DS1_poly,
+	//	process_DS1>, "**DS1**");
+	//run_base_loop(&run_base_allocations<typename containers::DS2,
+	//	typename combined_containers::DS2_mono,
+	//	typename combined_containers::DS2_multi,
+	//	typename combined_containers::DS2_poly,
+	//	process_DS2>, "**DS2**");
+	//run_base_loop(&run_base_allocations<typename containers::DS3,
+	//	typename combined_containers::DS3_mono,
+	//	typename combined_containers::DS3_multi,
+	//	typename combined_containers::DS3_poly,
+	//	process_DS3>, "**DS3**");
+	//run_base_loop(&run_base_allocations<typename containers::DS4,
+	//	typename combined_containers::DS4_mono,
+	//	typename combined_containers::DS4_multi,
+	//	typename combined_containers::DS4_poly,
+	//	process_DS4>, "**DS4**");
+	run_nested_loop(&run_base_allocations<typename containers::DS5,
+		typename alloc_containers::DS5<allocators<combined_containers::DS1_mono>::monotonic, allocators<int>::monotonic>,
+		typename alloc_containers::DS5<allocators<combined_containers::DS1_multi>::multipool, allocators<int>::multipool>,
+		typename alloc_containers::DS5<allocators<combined_containers::DS1_poly>::polymorphic, allocators<int>::polymorphic>,
+		process_DS5>, "**DS5**");
+
+
 	std::cout << "Done" << std::endl;
 }
