@@ -304,6 +304,58 @@ struct process_DS5 {
 	}
 };
 
+template<typename DS6>
+struct process_DS6 {
+	void operator() (DS6 *ds6, size_t elements) {
+		escape(ds6);
+		for (size_t i = 0; i < elements; i++) {
+			ds6->emplace_back();
+			ds6->back().reserve(1 << 7);
+			for (size_t j = 0; j < (1 << 7); j++)
+			{
+				ds6->back().emplace_back(&random_data[random_positions[j]], random_lengths[j]);
+			}
+
+		}
+		clobber();
+	}
+};
+
+template<typename DS7>
+struct process_DS7 {
+	void operator() (DS7 *ds7, size_t elements) {
+		escape(ds7);
+		for (size_t i = 0; i < elements; i++) {
+			ds7->emplace_back();
+			ds7->back().reserve(1 << 7);
+			for (size_t j = 0; j < (1 << 7); j++)
+			{
+				ds7->back().emplace((int)j);
+			}
+
+		}
+		clobber();
+	}
+};
+
+template<typename DS8>
+struct process_DS8 {
+	void operator() (DS8 *ds8, size_t elements) {
+		escape(ds8);
+		for (size_t i = 0; i < elements; i++) {
+			ds8->emplace_back();
+			ds8->back().reserve(1 << 7);
+			for (size_t j = 0; j < (1 << 7); j++)
+			{
+				ds8->back().emplace(&random_data[random_positions[j]], random_lengths[j]);
+			}
+
+		}
+		clobber();
+	}
+};
+
+
 template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
 static void run_base_allocations(unsigned long long iterations, size_t elements) {
 	// TODO: 
@@ -664,6 +716,21 @@ int main(int argc, char *argv[]) {
 		typename alloc_containers::DS5<allocators<combined_containers::DS1_multi>::multipool, allocators<int>::multipool>,
 		typename alloc_containers::DS5<allocators<combined_containers::DS1_poly>::polymorphic, allocators<int>::polymorphic>,
 		process_DS5>, "**DS5**");
+	run_nested_loop(&run_base_allocations<typename containers::DS6,
+		typename alloc_containers::DS6<string::monotonic, allocators<combined_containers::DS2_mono>::monotonic, allocators<string::monotonic>::monotonic>,
+		typename alloc_containers::DS6<string::multipool, allocators<combined_containers::DS2_multi>::multipool, allocators<string::multipool>::multipool>,
+		typename alloc_containers::DS6<string::polymorphic, allocators<combined_containers::DS2_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		process_DS6>, "**DS6**");
+	run_nested_loop(&run_base_allocations<typename containers::DS7,
+		typename alloc_containers::DS7<allocators<combined_containers::DS3_mono>::monotonic, allocators<int>::monotonic>,
+		typename alloc_containers::DS7<allocators<combined_containers::DS3_multi>::multipool, allocators<int>::multipool>,
+		typename alloc_containers::DS7<allocators<combined_containers::DS3_poly>::polymorphic, allocators<int>::polymorphic>,
+		process_DS7>, "**DS7**");
+	run_nested_loop(&run_base_allocations<typename containers::DS8,
+		typename alloc_containers::DS8<string::monotonic, allocators<combined_containers::DS4_mono>::monotonic, allocators<string::monotonic>::monotonic>,
+		typename alloc_containers::DS8<string::multipool, allocators<combined_containers::DS4_multi>::multipool, allocators<string::multipool>::multipool>,
+		typename alloc_containers::DS8<string::polymorphic, allocators<combined_containers::DS4_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		process_DS8>, "**DS8**");
 
 
 	std::cout << "Done" << std::endl;
