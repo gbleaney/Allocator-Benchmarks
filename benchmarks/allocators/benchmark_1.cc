@@ -36,7 +36,7 @@
 using namespace BloombergLP;
 
 // Global Variables
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_V4
 
 const size_t RANDOM_SIZE = 1000000;
@@ -639,14 +639,14 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl << "AS11" << std::endl;
 #endif
 
-	// AS11 - Monotonic + Multipool
+	// AS11 - Multipool backed by Monotonic
 	{
-		PROCESSER<MONO_CONT> processer;
+		PROCESSER<MULTI_CONT> processer;
 		c_start = std::clock();
 		for (unsigned long long i = 0; i < iterations; i++) {
-			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
-			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
-			MONO_CONT container(&alloc);
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			MULTI_CONT container(&alloc);
 			container.reserve(elements);
 			processer(&container, elements);
 		}
@@ -658,14 +658,14 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl << "AS12" << std::endl;
 #endif
 
-	// AS12 - Monotonic + Multipool with wink
+	// AS12 - Multipool backed by Monotonic with wink
 	{
-		PROCESSER<MONO_CONT> processer;
+		PROCESSER<MULTI_CONT> processer;
 		c_start = std::clock();
 		for (unsigned long long i = 0; i < iterations; i++) {
-			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
-			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
-			MONO_CONT* container = new(alloc) MONO_CONT(&alloc);
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
 			container->reserve(elements);
 			processer(container, elements);
 		}
@@ -677,13 +677,13 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl << "AS13" << std::endl;
 #endif
 
-	// AS13 - Monotonic + Multipool with Virtual
+	// AS13 - Multipool backed by Monotonic with Virtual
 	{
 		PROCESSER<POLY_CONT> processer;
 		c_start = std::clock();
 		for (unsigned long long i = 0; i < iterations; i++) {
-			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
-			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
 			POLY_CONT container(&alloc);
 			container.reserve(elements);
 			processer(&container, elements);
@@ -696,13 +696,13 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl << "AS14" << std::endl;
 #endif
 
-	// AS14 - Monotonic + Multipool with Virtual and Wink
+	// AS14 - Multipool backed by Monotonic with Virtual and Wink
 	{
 		PROCESSER<POLY_CONT> processer;
 		c_start = std::clock();
 		for (unsigned long long i = 0; i < iterations; i++) {
-			BloombergLP::bdlma::MultipoolAllocator underlying_alloc;
-			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool), &underlying_alloc);
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
 			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
 			container->reserve(elements);
 			processer(container, elements);
@@ -754,31 +754,6 @@ int main(int argc, char *argv[]) {
 
 	std::cout << std::endl << "Generating random numbers" << std::endl;
 	fill_random();
-
-	//std::cout << std::endl << "Creating Allocator" << std::endl << std::endl;
-
-	//BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-	//std::cout << std::endl << "Creating outer container" << std::endl << std::endl;
-
-	//typename alloc_containers::DS5<allocators<combined_containers::DS1_mono>::monotonic, allocators<int>::monotonic> container(&alloc);
-
-	//std::cout << std::endl << "Creating inner continer" << std::endl;
-
-	//typename combined_containers::DS1_mono inner(container.get_allocator());
-
-	//std::cout << std::endl << "Emplacing inner container" << std::endl;
-
-	//container.emplace_back();
-
-	//std::cout << std::endl << "Emplacing int" << std::endl;
-	//container[0].emplace_back(1);
-
-	//run_base_allocations<typename containers::DS2,
-	//	typename alloc_containers<nested_allocators<base_types::DS2, base_internal_types::DS2>::monotonic>::DS2,
-	//	typename alloc_containers<nested_allocators<base_types::DS2, base_internal_types::DS2>::multipool>::DS2,
-	//	typename alloc_containers<nested_allocators<base_types::DS2, base_internal_types::DS2>::polymorphic>::DS2,
-	//	process_DS2>(2, 2);
-
 
 	run_base_loop(&run_base_allocations<typename containers::DS1,
 		typename combined_containers::DS1_mono,

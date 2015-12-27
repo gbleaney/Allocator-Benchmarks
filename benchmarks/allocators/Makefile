@@ -15,11 +15,10 @@ AR = llvm-ar-3.6
 RANLIB = llvm-ranlib-3.6
 BDEWAF = waf
 
-OPTIM = #-O3 -DBSLS_ASSERT_LEVEL_NONE # TODO: Change back
+OPTIM = -O3 -DBSLS_ASSERT_LEVEL_NONE # TODO: Change back
 LTO =
-DEBUG = -g # TODO: Remove
+DEBUG =
 PARALLEL = 
-GROWTH_SIZE = 20  # use 16 or less for testing
 
 BSLSRC = ../..
 BSL = $(BSLSRC)/groups/bsl
@@ -58,19 +57,6 @@ CFLAGS_BDE = $(DEBUG) $(OPTIM) $(LTO) $(DEFS) $(CFLAGS) -std=c99
 CXXFLAGS_BDE = $(DEBUG) $(OPTIM) $(LTO) $(DEFS) $(STDLIB)
 CXXFLAGS_LOCAL = $(CXXFLAGS_BDE) -std=c++14 $(INCLUDES) $(CXXFLAGS)
 LDFLAGS_LOCAL = $(LIBS) $(LDFLAGS)
-
-all: run
-
-BINARIES = growth growth-DS159long shgrowth \
-           locality-AS1 locality-AS7 locality-AS9 locality-AS13 \
-           zation tention
-
-build: $(BINARIES)
-
-$(BINARIES): bde-tag
-
-OUTPUT =  results/*-result results/growth-*-* \
-    results/shuffle results/schedule-AS1 results/schedule-AS7
 
 clean:
 	rm -rf $(BINARIES) bde-tag $(BSLSRC)/build growth-*-* *-result
