@@ -1,9 +1,8 @@
 BDE Allocator Benchmarking Tools
 ================================
-These are the programs used to produce the results found in
+This is a group of programs attempting to reproduce the results found in
 [N4468](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4468.pdf),
-"On Quantifying Allocation Strategies".  Some of these programs have had bugs
-fixed since the paper was produced, so may not produce identical results.
+"On Quantifying Allocation Strategies".
 
 These programs depend upon:
   * Clang version 3.6 or later, or gcc version 5.1 or later, built with
@@ -18,11 +17,6 @@ These programs depend upon:
 A suitably-configured system can be built quickly using
 [Docker](https://docker.com); see the 'Docker' section below for instructions.
 
-This repository contains a snapshot of the BDE library patched to make use
-of various C++14 features required for the benchmark programs.  The patches
-are included separately here in the [bde-patches-minimal] and 
-[bde-patches-opt] files.
-
 To configure,
 ```
   $ vi Makefile    # configure per instructions
@@ -30,46 +24,26 @@ To configure,
 
 To build,
 ```
-  $ make build
+  $ make benchmark_##
 ```
 
 To run benchmarks,
 ```
-  $ make run
+  $ ./benchmark_##
 ```
 
-Other targets of interest:
-```
-  bde growth locality zation tention growth-orig
-  run-growth run-locality run-zation run-tention
-  clean
-```
-
-   progran    | section    | what
- -------------|------------|--------------------------------------------------
-  growth.cc   | section 7  | Creating/destroying isolated basic data structures
-  locality.cc | section 8  | Variation in Locality (long running)
-  zation.cc   | section 9  | Variation in Utilization
-  tention.cc  | section 10 | Variation in Contention
-
-Other files:
-
-  file                 | what
- ----------------------|---------------------------------
-  readme-growth.txt    | instructions to produce CSV of tables in the paper
-  test-growth          | scripts to run the benchmarks as published
-  test-locality        |
-  test-zation          |
-  test-tention         |
-  bde-patches-minimal  | snapshot of patches to bde that this depends on
-  bde-patches-opt      | snapshot of an optimization for (multi-)pool
 
 Docker
 ======
 Two Dockerfiles have been provided which can be used to construct images with
 all necessary tools and configuration for building these programs. One file 
 builds a Debian 'testing' (Stretch) based image, and the other builds an Ubuntu
-15.04 (Vivid) based image.
+15.04 (Vivid) based image. All commands should be run from within the 
+benchmarks/allocators dirrectory of the repo.
+
+Note: There are some known bugs for Docker on Windows that will prevent the
+below commands from working out of the box. See the final section for further
+explanation
 
 Debian Stretch
 --------------
@@ -79,10 +53,10 @@ To use the Debian Stretch Dockerfile, follow these steps:
 docker build -f ./docker/debian-stretch-clang --rm -t debian-stretch-clang ./docker
 
 # Build the BDE library and benchmarks using the image
-docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators debian-stretch-clang make build
+docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators debian-stretch-clang make benchmark_##
 
 # Run the benchmarks
-docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators debian-stretch-clang make run
+docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators debian-stretch-clang ./benchmark_##
 ```
 
 Ubuntu Vivid
@@ -93,10 +67,36 @@ To use the Ubuntu Vivid Dockerfile, follow these steps:
 docker build -f ./docker/ubuntu-vivid-clang --rm -t ubuntu-vivid-clang ./docker
 
 # Build the BDE library and benchmarks using the image
-docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators ubuntu-vivid-clang make build
+docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators ubuntu-vivid-clang make benchmark_##
 
 # Run the benchmarks
-docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators ubuntu-vivid-clang make run
+docker run --rm -v $(git rev-parse --show-toplevel):/src -w /src/benchmarks/allocators ubuntu-vivid-clang ./benchmark_##
+```
+
+Windows Example
+---------------
+Run the following command:
+```
+git rev-parse --show-toplevel
+```
+The output should look something like this:
+```
+C:/Users/gblea/Allocator-Benchmarks
+```
+You will need to change the slashes and drive letter to match the syntax
+expected by the docker terminal:
+```
+/c/Users/gblea/Allocator-Benchmarks
+```
+Replace ```$(git rev-parse --show-toplevel)``` with the modified path in the
+proveded docker commands, to get something like this:
+```
+docker run --rm -v /c/Users/gblea/Allocator-Benchmarks:/src -w /src/benchmarks/allocators debian-stretch-clang make benchmark_1
+```
+Finally, add a second forward slash to all root-level forward slashes in
+the command:
+```
+docker run --rm -v //c/Users/gblea/Allocator-Benchmarks://src -w //src/benchmarks/allocators debian-stretch-clang make benchmark_1
 ```
 
 FAQ

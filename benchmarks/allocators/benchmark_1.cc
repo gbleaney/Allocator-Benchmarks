@@ -36,7 +36,7 @@
 using namespace BloombergLP;
 
 // Global Variables
-//#define DEBUG
+#define DEBUG
 //#define DEBUG_V4
 
 const size_t RANDOM_SIZE = 1000000;
