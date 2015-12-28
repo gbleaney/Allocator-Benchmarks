@@ -78,5 +78,8 @@ bde-tag: Makefile
 	)
 	touch bde-tag
 
-benchmark_1: benchmark_1.cc bde-tag
+benchmark_1: benchmark_1.cc benchmark_common.h bde-tag
+	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
+
+benchmark_2: benchmark_2.cc benchmark_common.h bde-tag
 	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
