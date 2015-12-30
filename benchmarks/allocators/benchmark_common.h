@@ -84,12 +84,18 @@ struct alloc_adaptor {
 	template<typename OTHER, typename... Args>
 	void construct(OTHER * object, Args &&... args)
 	{
+#ifdef DEBUG_V4
+		std::cout << "Constructing object of type " << typeid(OTHER).name() << std::endl;
+#endif
 		new (object) OTHER(std::forward<Args>(args)...);
 	}
 
 	template<typename OTHER>
 	void destroy(OTHER * object)
 	{
+#ifdef DEBUG_V4
+		std::cout << "Destroying object of type " << typeid(OTHER).name() << std::endl;
+#endif
 		object->~OTHER();
 	}
 };

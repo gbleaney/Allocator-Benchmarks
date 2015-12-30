@@ -1,3 +1,10 @@
+// Debugging Settings
+
+#define DEBUG
+#define DEBUG_V1
+//#define DEBUG_V2
+//#define DEBUG_V3
+//#define DEBUG_V4
 
 #include <iostream>
 #include <iomanip>
@@ -39,11 +46,6 @@
 using namespace BloombergLP;
 
 // Global Variables
-#define DEBUG
-#define DEBUG_V1
-//#define DEBUG_V2
-//#define DEBUG_V3
-//#define DEBUG_V4
 
 #ifdef DEBUG
 int AF_RF_PRODUCT = 256;
@@ -115,7 +117,7 @@ double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
 	vec.reserve(expanded_k);
 	for (size_t i = 0; i < expanded_k; i++)
 	{
-		vec.emplace_back();
+		vec.emplace_back(vec.get_allocator());
 		for (size_t j = 0; j < expanded_S; j++)
 		{
 			vec.back().emplace_back((int)j);
@@ -162,15 +164,15 @@ void generate_table(int G, int alloc_num) {
 				double result = 0;
 				switch (alloc_num) {
 					case 0: {
-						//typename vectors::def vec;
-						//result = run_combination(G, S, af, sf, rf, vec);
+						typename vectors::def vec;
+						result = run_combination(G, S, af, sf, rf, vec);
 						break;
 					}
 
 					case 7: {
-						//BloombergLP::bdlma::MultipoolAllocator alloc;
-						//typename vectors::multipool vec(&alloc);
-						//result = run_combination(G, S, af, sf, rf, vec);
+						BloombergLP::bdlma::MultipoolAllocator alloc;
+						typename vectors::multipool vec(&alloc);
+						result = run_combination(G, S, af, sf, rf, vec);
 						break;
 					}
 				}
@@ -196,19 +198,29 @@ int main(int argc, char *argv[]) {
 	std::cout << "Started" << std::endl;
 
 
-	typename lists::def list;
-	list.push_back(1);
-	std::cout << list.back() << std::endl;
+	//typename lists::def list;
+	//list.push_back(1);
+	//std::cout << list.back() << std::endl;
 
-	BloombergLP::bdlma::MultipoolAllocator alloc;
-	typename lists::multipool list_multi(&alloc);
-	list_multi.push_back(2);
-	std::cout << list_multi.back() << std::endl;
+	//BloombergLP::bdlma::MultipoolAllocator alloc;
+	//typename lists::multipool list_multi(&alloc);
+	//list_multi.push_back(2);
+	//std::cout << list_multi.back() << std::endl;
+	{
+		std::cout << "Creating allocator" << std::endl;
+		BloombergLP::bdlma::MultipoolAllocator alloc;
+		std::cout << "Creating Vector" << std::endl;
+		typename vectors::multipool vector(&alloc);
+		std::cout << "Creating List" << std::endl;
+		vector.emplace_back(&alloc);
+		std::cout << "Adding to list" << std::endl;
+		vector[0].push_back(3);
+		std::cout << "Reading from List/Vector" << std::endl;
+		std::cout << vector[0].back() << std::endl;
+		std::cout << "Destroying Vector/List" << std::endl;
+	}
 
-	typename vectors::multipool vector(&alloc);
-	vector.emplace_back(&alloc);
-	vector[0].push_back(3);
-	std::cout << vector[0].back() << std::endl;
+
 
 
 	//std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
