@@ -38,6 +38,8 @@ void clobber()
 template <typename T, typename ALLOC>
 struct alloc_adaptor {
 	typedef T value_type;
+	typedef T * pointer;
+	typedef const T * const_pointer;
 	typedef T& reference;
 	typedef T const& const_reference;
 	ALLOC* alloc;
@@ -71,6 +73,25 @@ struct alloc_adaptor {
 		std::cout << "Deallocating" << std::endl;
 #endif
 		alloc->deallocate(p); }
+
+	// TODO: Validate that these do not have unintended consequences
+	template<typename OTHER>
+	struct rebind
+	{
+		typedef alloc_adaptor<OTHER, ALLOC> other;
+	};
+
+	template<typename OTHER, typename... Args>
+	void construct(OTHER * object, Args &&... args)
+	{
+		new (object) OTHER(std::forward<Args>(args)...);
+	}
+
+	template<typename OTHER>
+	void destroy(OTHER * object)
+	{
+		object->~OTHER();
+	}
 };
 
 template <typename T, typename A>

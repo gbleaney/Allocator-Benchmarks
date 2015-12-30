@@ -55,18 +55,18 @@ int AF_RF_PRODUCT = 2560;
 // Convenience typedefs
 struct lists {
 	typedef std::list<int> def;
-	typedef std::list<int, typename allocators<int>::newdel> newdel;
-	typedef std::list<int, typename allocators<int>::monotonic> monotonic;
-	typedef std::list<int, typename allocators<int>::multipool> multipool;
+	typedef std::list<int, typename alloc_adaptors<int>::newdel> newdel;
+	typedef std::list<int, typename alloc_adaptors<int>::monotonic> monotonic;
+	typedef std::list<int, typename alloc_adaptors<int>::multipool> multipool;
 	typedef std::list<int, bsl::allocator<int>> polymorphic;
 };
 
 struct vectors {
 	typedef std::vector<lists::def> def;
-	typedef std::vector<lists::newdel, typename allocators<lists::newdel>::newdel> newdel;
-	typedef std::vector<lists::monotonic, typename allocators<lists::monotonic>::monotonic> monotonic;
-	typedef std::vector<lists::multipool, typename allocators<lists::multipool>::multipool> multipool;
-	typedef std::vector<lists::polymorphic, bsl::allocator<lists::polymorphic>> polymorphic;
+	typedef std::vector<lists::newdel, typename alloc_adaptors<lists::newdel>::newdel> newdel;
+	typedef std::vector<lists::monotonic, typename alloc_adaptors<lists::monotonic>::monotonic> monotonic;
+	typedef std::vector<lists::multipool, typename alloc_adaptors<lists::multipool>::multipool> multipool;
+	typedef std::vector<lists::polymorphic, bsl::allocator<int>> polymorphic;
 };
 
 template<typename VECTOR>
@@ -162,15 +162,15 @@ void generate_table(int G, int alloc_num) {
 				double result = 0;
 				switch (alloc_num) {
 					case 0: {
-						typename vectors::def vec;
-						result = run_combination(G, S, af, sf, rf, vec);
+						//typename vectors::def vec;
+						//result = run_combination(G, S, af, sf, rf, vec);
 						break;
 					}
 
 					case 7: {
-						BloombergLP::bdlma::MultipoolAllocator alloc;
-						typename vectors::multipool vec(&alloc);
-						result = run_combination(G, S, af, sf, rf, vec);
+						//BloombergLP::bdlma::MultipoolAllocator alloc;
+						//typename vectors::multipool vec(&alloc);
+						//result = run_combination(G, S, af, sf, rf, vec);
 						break;
 					}
 				}
@@ -195,19 +195,33 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	AF_RF_PRODUCT;
 
-	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
-	generate_table(21, 0);
+	typename lists::def list;
+	list.push_back(1);
+	std::cout << list.back() << std::endl;
 
-	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
-	generate_table(21, 7);
+	BloombergLP::bdlma::MultipoolAllocator alloc;
+	typename lists::multipool list_multi(&alloc);
+	list_multi.push_back(2);
+	std::cout << list_multi.back() << std::endl;
 
-	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	generate_table(25, 0);
+	typename vectors::multipool vector(&alloc);
+	vector.emplace_back(&alloc);
+	vector[0].push_back(3);
+	std::cout << vector[0].back() << std::endl;
 
-	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	generate_table(25, 7);
+
+	//std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	//generate_table(21, 0);
+
+	//std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	//generate_table(21, 7);
+
+	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	//generate_table(25, 0);
+
+	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	//generate_table(25, 7);
 
 
 	std::cout << "Done" << std::endl;
