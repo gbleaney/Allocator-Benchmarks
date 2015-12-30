@@ -114,6 +114,7 @@ struct alloc_adaptors {
 	typedef alloc_adaptor<BASE, BloombergLP::bslma::NewDeleteAllocator> newdel;
 	typedef alloc_adaptor<BASE, BloombergLP::bdlma::BufferedSequentialAllocator> monotonic;
 	typedef alloc_adaptor<BASE, BloombergLP::bdlma::MultipoolAllocator> multipool;
+	typedef bsl::allocator<BASE> polymorphic;
 };
 
 template< typename BASE>

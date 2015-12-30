@@ -198,43 +198,31 @@ int main(int argc, char *argv[]) {
 	std::cout << "Started" << std::endl;
 
 
-	//typename lists::def list;
-	//list.push_back(1);
-	//std::cout << list.back() << std::endl;
+	//{
+	//	std::cout << "Creating allocator" << std::endl;
+	//	BloombergLP::bdlma::MultipoolAllocator alloc;
+	//	std::cout << "Creating Vector" << std::endl;
+	//	typename vectors::multipool vector(&alloc);
+	//	std::cout << "Creating List" << std::endl;
+	//	vector.emplace_back(&alloc);
+	//	std::cout << "Adding to list" << std::endl;
+	//	vector[0].push_back(3);
+	//	std::cout << "Reading from List/Vector" << std::endl;
+	//	std::cout << vector[0].back() << std::endl;
+	//	std::cout << "Destroying Vector/List" << std::endl;
+	//}
 
-	//BloombergLP::bdlma::MultipoolAllocator alloc;
-	//typename lists::multipool list_multi(&alloc);
-	//list_multi.push_back(2);
-	//std::cout << list_multi.back() << std::endl;
-	{
-		std::cout << "Creating allocator" << std::endl;
-		BloombergLP::bdlma::MultipoolAllocator alloc;
-		std::cout << "Creating Vector" << std::endl;
-		typename vectors::multipool vector(&alloc);
-		std::cout << "Creating List" << std::endl;
-		vector.emplace_back(&alloc);
-		std::cout << "Adding to list" << std::endl;
-		vector[0].push_back(3);
-		std::cout << "Reading from List/Vector" << std::endl;
-		std::cout << vector[0].back() << std::endl;
-		std::cout << "Destroying Vector/List" << std::endl;
-	}
+	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	generate_table(21, 0);
 
+	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	generate_table(21, 7);
 
+	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	generate_table(25, 0);
 
-
-	//std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
-	//generate_table(21, 0);
-
-	//std::cout << "Problem Size 2^21 With Allocators" << std::endl;
-	//generate_table(21, 7);
-
-	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	//generate_table(25, 0);
-
-	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	//generate_table(25, 7);
-
+	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	generate_table(25, 7);
 
 	std::cout << "Done" << std::endl;
 }
