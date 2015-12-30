@@ -40,11 +40,21 @@ using namespace BloombergLP;
 
 // Global Variables
 #define DEBUG
+#define DEBUG_V1
+//#define DEBUG_V2
+//#define DEBUG_V3
 //#define DEBUG_V4
+
+#ifdef DEBUG
+int AF_RF_PROCUCT = 256
+#else
+int AF_RF_PROCUCT = 2560
+#endif // DEBUG
+
 
 // Convenience typedefs
 struct lists {
-	typedef std::list<int> default;
+	typedef std::list<int> def;
 	typedef std::list<int, typename allocators<int>::newdel> newdel;
 	typedef std::list<int, typename allocators<int>::monotonic> monotonic;
 	typedef std::list<int, typename allocators<int>::multipool> multipool;
@@ -52,7 +62,7 @@ struct lists {
 };
 
 struct vectors {
-	typedef std::vector<lists::default> default;
+	typedef std::vector<lists::def> def;
 	typedef std::vector<lists::newdel, typename allocators<lists::newdel>::newdel> newdel;
 	typedef std::vector<lists::monotonic, typename allocators<lists::monotonic>::monotonic> monotonic;
 	typedef std::vector<lists::multipool, typename allocators<lists::multipool>::multipool> multipool;
@@ -60,18 +70,25 @@ struct vectors {
 };
 
 template<typename VECTOR>
-void access_lists(VECTOR *vec, int af) {
-	for (size_t i = 0; i < vec->size(); i++)	{
-		for (size_t j = 0; j < af; j++)	{
-			for (auto it = (*vec)[i].begin(); it != (*vec)[i].end(); ++it) {
-				(&it)++; // Increment int to cause loop to have some effect
+double access_lists(VECTOR *vec, int af, int rf) {
+	std::cout << "Accessing Lists" << std::endl;
+	std::clock_t c_start = std::clock();
+
+	for (size_t r = 0; r < rf; r++)	{
+		for (size_t i = 0; i < vec->size(); i++) {
+			for (size_t a = 0; a < af; a++) {
+				for (auto it = (*vec)[i].begin(); it != (*vec)[i].end(); ++it) {
+					(*it)++; // Increment int to cause loop to have some effect
+				}
+				clobber(); // TODO will this hurt caching?
 			}
-			clobber(); // TODO will this hurt caching?
 		}
 	}
+	std::clock_t c_end = std::clock();
+	return (c_end - c_start) * 1.0 / CLOCKS_PER_SEC;
 }
 
-void run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf = 8) {
+double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf = 8) {
 	// G  = Total system size (# subsystems * elements in subsystems). Given as power of 2 (size really = 2^G)
 	// S  = Elements per subsystem. Given as power of 2 (size really = 2^S)
 	// af = Access Factor - Number of iterations through a subsystem (linked list) before moving to the next
@@ -85,10 +102,14 @@ void run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf =
 	expanded_S <<= S;
 	expanded_k <<= k;
 
+#ifdef DEBUG_V1
 	std::cout << "Total number of lists (k) = 2^" << k << " (aka " << expanded_k << ")" << std::endl;
+	std::cout << "Total number of elements per sub system (S) = 2^" << S << " (aka " << expanded_S << ")" << std::endl;
+#endif // DEBUG_V1
+
 
 	// Create data under test
-	typename vectors::default vec;
+	typename vectors::def vec;
 	vec.reserve(expanded_k);
 	for (size_t i = 0; i < expanded_k; i++)
 	{
@@ -99,17 +120,28 @@ void run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf =
 		}
 	}
 
+	double result = 0.0;
 	if (sf < 0) {
 		// Access the data
-		access_lists(&vec, af);
+		result = access_lists(&vec, af, rf);
 	}
-	// Shuffle the data
 
+	// Shuffle the data
+	std::cout << "Shuffling data " << std::abs(sf) << " times" << std::endl;
+	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
+	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
+	for (size_t i = 0; i < std::abs(sf); i++) {
+		for (size_t j = 0; j < vec.size(); j++)	{
+			vec[position_distribution(generator)].emplace_back(vec[j].front());
+			vec[j].pop_front();
+		}
+	}
 
 	if (sf > 0) {
 		// Access the data
-		access_lists(&vec, af);
+		result = access_lists(&vec, af, rf);
 	}
+	return result;
 }
 
 
@@ -122,14 +154,13 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	std::cout << std::endl << "Generating random numbers" << std::endl;
-	fill_random();
+	for (size_t i = 0; i < 1; i++) {
 
-	for (size_t i = 0; i < 1; i++)
-	{
 		int pid = fork();
 		if (pid == 0) { // Child process
-			run_combination();
+			double result = run_combination(5, 1, 2, -2, 2);
+			std::cout << "Result: " << result << std::endl;
+			return 0;
 		}
 	}
 

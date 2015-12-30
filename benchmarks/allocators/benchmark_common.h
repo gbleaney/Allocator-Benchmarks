@@ -20,36 +20,6 @@
 
 using namespace BloombergLP;
 
-const size_t RANDOM_SIZE = 1000000;
-const size_t RANDOM_DATA_POINTS = 1<<16;
-const size_t RANDOM_LENGTH_MIN = 33;
-const size_t RANDOM_LENGTH_MAX = 1000;
-
-
-alignas(long long) static char pool[1 << 30];
-char random_data[RANDOM_SIZE];
-size_t random_positions[RANDOM_DATA_POINTS];
-size_t random_lengths[RANDOM_DATA_POINTS];
-
-// Setup Functions
-void fill_random() {
-	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
-	std::uniform_int_distribution<char> char_distribution(CHAR_MIN, CHAR_MAX);
-	std::uniform_int_distribution<size_t> position_distribution(0, RANDOM_SIZE - RANDOM_LENGTH_MAX);
-	std::uniform_int_distribution<size_t> length_distribution(RANDOM_LENGTH_MIN, RANDOM_LENGTH_MAX);
-
-
-	for (size_t i = 0; i < RANDOM_SIZE; i++)
-	{
-		random_data[i] = char_distribution(generator);
-	}
-	for (size_t i = 0; i < RANDOM_DATA_POINTS; i++)
-	{
-		random_positions[i] = position_distribution(generator);
-		random_lengths[i] = length_distribution(generator);
-	}
-}
-
 // Chandler Carruth's Optimizer-Defeating Magic
 // Source: https://www.youtube.com/watch?v=nXaxk27zwlk
 inline
