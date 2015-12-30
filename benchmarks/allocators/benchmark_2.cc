@@ -46,9 +46,9 @@ using namespace BloombergLP;
 //#define DEBUG_V4
 
 #ifdef DEBUG
-int AF_RF_PROCUCT = 256;
+int AF_RF_PRODUCT = 256;
 #else
-int AF_RF_PROCUCT = 2560;
+int AF_RF_PRODUCT = 2560;
 #endif // DEBUG
 
 
@@ -71,7 +71,10 @@ struct vectors {
 
 template<typename VECTOR>
 double access_lists(VECTOR *vec, int af, int rf) {
+#ifdef DEBUG_V3
 	std::cout << "Accessing Lists" << std::endl;
+#endif // DEBUG_V3
+
 	std::clock_t c_start = std::clock();
 
 	for (size_t r = 0; r < rf; r++)	{
@@ -102,10 +105,10 @@ double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf
 	expanded_S <<= S;
 	expanded_k <<= k;
 
-#ifdef DEBUG_V1
+#ifdef DEBUG_V3
 	std::cout << "Total number of lists (k) = 2^" << k << " (aka " << expanded_k << ")" << std::endl;
 	std::cout << "Total number of elements per sub system (S) = 2^" << S << " (aka " << expanded_S << ")" << std::endl;
-#endif // DEBUG_V1
+#endif // DEBUG_V3
 
 
 	// Create data under test
@@ -127,7 +130,10 @@ double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf
 	}
 
 	// Shuffle the data
+#ifdef DEBUG_V3
 	std::cout << "Shuffling data " << std::abs(sf) << " times" << std::endl;
+#endif // DEBUG_V3
+
 	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
 	for (size_t i = 0; i < std::abs(sf); i++) {
@@ -154,14 +160,29 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	for (size_t i = 0; i < 1; i++) {
+	AF_RF_PRODUCT;
 
-		int pid = fork();
-		if (pid == 0) { // Child process
-			double result = run_combination(5, 1, 2, -2, 2);
-			std::cout << "Result: " << result << std::endl;
-			return 0;
+	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+
+	int G = 21;
+	int sf = 5;
+	for (int S = 21; S >= 0; S--) {
+		for (int af = 256; af >= 1; af >>= 1) {
+			int rf = AF_RF_PRODUCT / af;
+#ifdef DEBUG_V3
+			std::cout << "G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+#endif
+			int pid = fork();
+			if (pid == 0) { // Child process
+				double result = run_combination(G, S, af, sf, rf);
+				std::cout << result << " ";
+				exit(0);
+			}
+			else {
+				wait(NULL);
+			}
 		}
+		std::cout << std::endl;
 	}
 
 	std::cout << "Done" << std::endl;
