@@ -46,9 +46,9 @@ using namespace BloombergLP;
 //#define DEBUG_V4
 
 #ifdef DEBUG
-int AF_RF_PROCUCT = 256
+int AF_RF_PROCUCT = 256;
 #else
-int AF_RF_PROCUCT = 2560
+int AF_RF_PROCUCT = 2560;
 #endif // DEBUG
 
 

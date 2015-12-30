@@ -79,7 +79,7 @@ template <typename T>
 struct hash {
 	typedef std::size_t result_type;
 	typedef T argument_type;
-	result_type operator()(T obj) { return hash_value++; }
+	result_type operator()(T obj) const { return hash_value++; }
 };
 
 template <typename T>
