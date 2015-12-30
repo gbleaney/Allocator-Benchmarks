@@ -27,7 +27,6 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
-#include <scoped_allocator>
 
 #include "benchmark_common.h"
 
@@ -99,7 +98,7 @@ struct string {
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::monotonic> monotonic;
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::multipool> multipool;
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::newdel> newdel;
-	typedef std::basic_string<char, std::char_traits<char>, bsl::allocator<char>> polymorphic;
+	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::polymorphic> polymorphic;
 };
 
 struct containers {
@@ -146,21 +145,21 @@ struct alloc_containers {
 };
 
 struct combined_containers {
-	typedef alloc_containers::DS1<allocators<int>::monotonic> DS1_mono;
-	typedef alloc_containers::DS1<allocators<int>::multipool> DS1_multi;
-	typedef alloc_containers::DS1<allocators<int>::polymorphic> DS1_poly;
+	typedef alloc_containers::DS1<alloc_adaptors<int>::monotonic> DS1_mono;
+	typedef alloc_containers::DS1<alloc_adaptors<int>::multipool> DS1_multi;
+	typedef alloc_containers::DS1<alloc_adaptors<int>::polymorphic> DS1_poly;
 
-	typedef alloc_containers::DS2<string::monotonic, allocators<string::monotonic>::monotonic> DS2_mono;
-	typedef alloc_containers::DS2<string::multipool, allocators<string::multipool>::multipool> DS2_multi;
-	typedef alloc_containers::DS2<string::polymorphic, allocators<string::polymorphic>::polymorphic> DS2_poly;
+	typedef alloc_containers::DS2<string::monotonic, alloc_adaptors<string::monotonic>::monotonic> DS2_mono;
+	typedef alloc_containers::DS2<string::multipool, alloc_adaptors<string::multipool>::multipool> DS2_multi;
+	typedef alloc_containers::DS2<string::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic> DS2_poly;
 
-	typedef alloc_containers::DS3<allocators<int>::monotonic> DS3_mono;
-	typedef alloc_containers::DS3<allocators<int>::multipool> DS3_multi;
-	typedef alloc_containers::DS3<allocators<int>::polymorphic> DS3_poly;
+	typedef alloc_containers::DS3<alloc_adaptors<int>::monotonic> DS3_mono;
+	typedef alloc_containers::DS3<alloc_adaptors<int>::multipool> DS3_multi;
+	typedef alloc_containers::DS3<alloc_adaptors<int>::polymorphic> DS3_poly;
 	
-	typedef alloc_containers::DS4<string::monotonic, allocators<string::monotonic>::monotonic> DS4_mono;
-	typedef alloc_containers::DS4<string::multipool, allocators<string::multipool>::multipool> DS4_multi;
-	typedef alloc_containers::DS4<string::polymorphic, allocators<string::polymorphic>::polymorphic> DS4_poly;
+	typedef alloc_containers::DS4<string::monotonic, alloc_adaptors<string::monotonic>::monotonic> DS4_mono;
+	typedef alloc_containers::DS4<string::multipool, alloc_adaptors<string::multipool>::multipool> DS4_multi;
+	typedef alloc_containers::DS4<string::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic> DS4_poly;
 
 };
 
@@ -182,7 +181,7 @@ struct process_DS2 {
 	void operator() (DS2 *ds2, size_t elements) {
 		escape(ds2);
 		for (size_t i = 0; i < elements; i++) {
-			ds2->emplace_back(&random_data[random_positions[i]], random_lengths[i]);
+			ds2->emplace_back(&random_data[random_positions[i]], random_lengths[i], ds2->get_allocator());
 		}
 		clobber();
 	}
@@ -204,7 +203,7 @@ struct process_DS4 {
 	void operator() (DS4 *ds4, size_t elements) {
 		escape(ds4);
 		for (size_t i = 0; i < elements; i++) {
-			ds4->emplace(&random_data[random_positions[i]], random_lengths[i]);
+			ds4->emplace(&random_data[random_positions[i]], random_lengths[i], ds4->get_allocator());
 		}
 		clobber();
 	}
@@ -215,7 +214,7 @@ struct process_DS5 {
 	void operator() (DS5 *ds5, size_t elements) {
 		escape(ds5);
 		for (size_t i = 0; i < elements; i++) {
-			ds5->emplace_back();
+			ds5->emplace_back(ds5->get_allocator());
 			ds5->back().reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
@@ -232,11 +231,11 @@ struct process_DS6 {
 	void operator() (DS6 *ds6, size_t elements) {
 		escape(ds6);
 		for (size_t i = 0; i < elements; i++) {
-			ds6->emplace_back();
+			ds6->emplace_back(ds6->get_allocator());
 			ds6->back().reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
-				ds6->back().emplace_back(&random_data[random_positions[j]], random_lengths[j]);
+				ds6->back().emplace_back(&random_data[random_positions[j]], random_lengths[j], ds6->get_allocator());
 			}
 
 		}
@@ -249,7 +248,7 @@ struct process_DS7 {
 	void operator() (DS7 *ds7, size_t elements) {
 		escape(ds7);
 		for (size_t i = 0; i < elements; i++) {
-			ds7->emplace_back();
+			ds7->emplace_back(ds7->get_allocator());
 			ds7->back().reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
@@ -266,11 +265,11 @@ struct process_DS8 {
 	void operator() (DS8 *ds8, size_t elements) {
 		escape(ds8);
 		for (size_t i = 0; i < elements; i++) {
-			ds8->emplace_back();
+			ds8->emplace_back(ds8->get_allocator());
 			ds8->back().reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
-				ds8->back().emplace(&random_data[random_positions[j]], random_lengths[j]);
+				ds8->back().emplace(&random_data[random_positions[j]], random_lengths[j], ds8->get_allocator());
 			}
 
 		}
@@ -306,7 +305,7 @@ struct process_DS10 {
 			inner.reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
-				inner.emplace_back(&random_data[random_positions[j]], random_lengths[j]);
+				inner.emplace_back(&random_data[random_positions[j]], random_lengths[j], ds10->get_allocator());
 			}
 
 			auto pair = ds10->emplace(std::move(inner)); // Pair of iterator to element and success
@@ -344,7 +343,7 @@ struct process_DS12 {
 			inner.reserve(1 << 7);
 			for (size_t j = 0; j < (1 << 7); j++)
 			{
-				inner.emplace(&random_data[random_positions[j]], random_lengths[j]);
+				inner.emplace(&random_data[random_positions[j]], random_lengths[j], ds12->get_allocator());
 			}
 
 			auto pair = ds12->emplace(std::move(inner)); // Pair of iterator to element and success
@@ -687,44 +686,44 @@ int main(int argc, char *argv[]) {
 		typename combined_containers::DS4_poly,
 		process_DS4>, "**DS4**");
 	run_nested_loop(&run_base_allocations<typename containers::DS5,
-		typename alloc_containers::DS5<allocators<combined_containers::DS1_mono>::monotonic, allocators<int>::monotonic>,
-		typename alloc_containers::DS5<allocators<combined_containers::DS1_multi>::multipool, allocators<int>::multipool>,
-		typename alloc_containers::DS5<allocators<combined_containers::DS1_poly>::polymorphic, allocators<int>::polymorphic>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
 		process_DS5>, "**DS5**");
 	run_nested_loop(&run_base_allocations<typename containers::DS6,
-		typename alloc_containers::DS6<string::monotonic, allocators<combined_containers::DS2_mono>::monotonic, allocators<string::monotonic>::monotonic>,
-		typename alloc_containers::DS6<string::multipool, allocators<combined_containers::DS2_multi>::multipool, allocators<string::multipool>::multipool>,
-		typename alloc_containers::DS6<string::polymorphic, allocators<combined_containers::DS2_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		typename alloc_containers::DS6<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
+		typename alloc_containers::DS6<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
+		typename alloc_containers::DS6<string::polymorphic, alloc_adaptors<combined_containers::DS2_poly>::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic>,
 		process_DS6>, "**DS6**");
 	run_nested_loop(&run_base_allocations<typename containers::DS7,
-		typename alloc_containers::DS7<allocators<combined_containers::DS3_mono>::monotonic, allocators<int>::monotonic>,
-		typename alloc_containers::DS7<allocators<combined_containers::DS3_multi>::multipool, allocators<int>::multipool>,
-		typename alloc_containers::DS7<allocators<combined_containers::DS3_poly>::polymorphic, allocators<int>::polymorphic>,
+		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
 		process_DS7>, "**DS7**");
 	run_nested_loop(&run_base_allocations<typename containers::DS8,
-		typename alloc_containers::DS8<string::monotonic, allocators<combined_containers::DS4_mono>::monotonic, allocators<string::monotonic>::monotonic>,
-		typename alloc_containers::DS8<string::multipool, allocators<combined_containers::DS4_multi>::multipool, allocators<string::multipool>::multipool>,
-		typename alloc_containers::DS8<string::polymorphic, allocators<combined_containers::DS4_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		typename alloc_containers::DS8<string::monotonic, alloc_adaptors<combined_containers::DS4_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
+		typename alloc_containers::DS8<string::multipool, alloc_adaptors<combined_containers::DS4_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
+		typename alloc_containers::DS8<string::polymorphic, alloc_adaptors<combined_containers::DS4_poly>::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic>,
 		process_DS8>, "**DS8**");
 	run_nested_loop(&run_base_allocations<typename containers::DS9,
-		typename alloc_containers::DS9<allocators<combined_containers::DS1_mono>::monotonic, allocators<int>::monotonic>,
-		typename alloc_containers::DS9<allocators<combined_containers::DS1_multi>::multipool, allocators<int>::multipool>,
-		typename alloc_containers::DS9<allocators<combined_containers::DS1_poly>::polymorphic, allocators<int>::polymorphic>,
+		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
 		process_DS9>, "**DS9**");
 	run_nested_loop(&run_base_allocations<typename containers::DS10,
-		typename alloc_containers::DS10<string::monotonic, allocators<combined_containers::DS2_mono>::monotonic, allocators<string::monotonic>::monotonic>,
-		typename alloc_containers::DS10<string::multipool, allocators<combined_containers::DS2_multi>::multipool, allocators<string::multipool>::multipool>,
-		typename alloc_containers::DS10<string::polymorphic, allocators<combined_containers::DS2_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		typename alloc_containers::DS10<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
+		typename alloc_containers::DS10<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
+		typename alloc_containers::DS10<string::polymorphic, alloc_adaptors<combined_containers::DS2_poly>::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic>,
 		process_DS10>, "**DS10**");
 	run_nested_loop(&run_base_allocations<typename containers::DS11,
-		typename alloc_containers::DS11<allocators<combined_containers::DS3_mono>::monotonic, allocators<int>::monotonic>,
-		typename alloc_containers::DS11<allocators<combined_containers::DS3_multi>::multipool, allocators<int>::multipool>,
-		typename alloc_containers::DS11<allocators<combined_containers::DS3_poly>::polymorphic, allocators<int>::polymorphic>,
+		typename alloc_containers::DS11<alloc_adaptors<combined_containers::DS3_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS11<alloc_adaptors<combined_containers::DS3_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS11<alloc_adaptors<combined_containers::DS3_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
 		process_DS11>, "**DS11**");
 	run_nested_loop(&run_base_allocations<typename containers::DS12,
-		typename alloc_containers::DS12<string::monotonic, allocators<combined_containers::DS4_mono>::monotonic, allocators<string::monotonic>::monotonic>,
-		typename alloc_containers::DS12<string::multipool, allocators<combined_containers::DS4_multi>::multipool, allocators<string::multipool>::multipool>,
-		typename alloc_containers::DS12<string::polymorphic, allocators<combined_containers::DS4_poly>::polymorphic, allocators<string::polymorphic>::polymorphic>,
+		typename alloc_containers::DS12<string::monotonic, alloc_adaptors<combined_containers::DS4_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
+		typename alloc_containers::DS12<string::multipool, alloc_adaptors<combined_containers::DS4_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
+		typename alloc_containers::DS12<string::polymorphic, alloc_adaptors<combined_containers::DS4_poly>::polymorphic, alloc_adaptors<string::polymorphic>::polymorphic>,
 		process_DS12>, "**DS12**");
 
 	std::cout << "Done" << std::endl;

@@ -35,7 +35,6 @@
 
 #include <vector>
 #include <list>
-#include <scoped_allocator>
 
 #include "benchmark_common.h"
 

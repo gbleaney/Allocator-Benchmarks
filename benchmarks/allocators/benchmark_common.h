@@ -116,27 +116,3 @@ struct alloc_adaptors {
 	typedef alloc_adaptor<BASE, BloombergLP::bdlma::MultipoolAllocator> multipool;
 	typedef bsl::allocator<BASE> polymorphic;
 };
-
-template< typename BASE>
-struct allocators {
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::newdel> newdel;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::monotonic> monotonic;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<BASE>::multipool> multipool;
-	typedef std::scoped_allocator_adaptor<bsl::allocator<BASE>> polymorphic;
-};
-
-template<typename CONTAINER, typename BASE>
-struct nested_allocators {
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::newdel, typename alloc_adaptors<BASE>::newdel> newdel;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::monotonic, typename alloc_adaptors<BASE>::monotonic> monotonic;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::multipool, typename alloc_adaptors<BASE>::multipool> multipool;
-	typedef std::scoped_allocator_adaptor<bsl::allocator<CONTAINER>, bsl::allocator<BASE>> polymorphic;
-};
-
-template<typename CONTAINER, typename BASE, typename BASE_INTERNAL>
-struct tripple_nested_allocators {
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::newdel, typename alloc_adaptors<BASE>::newdel, typename alloc_adaptors<BASE_INTERNAL>::newdel> newdel;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::monotonic, typename alloc_adaptors<BASE>::monotonic, typename alloc_adaptors<BASE_INTERNAL>::monotonic> monotonic;
-	typedef std::scoped_allocator_adaptor<typename alloc_adaptors<CONTAINER>::multipool, typename alloc_adaptors<BASE>::multipool, typename alloc_adaptors<BASE_INTERNAL>::multipool> multipool;
-	typedef std::scoped_allocator_adaptor<bsl::allocator<CONTAINER>, bsl::allocator<BASE>, bsl::allocator<BASE_INTERNAL>> polymorphic;
-};
