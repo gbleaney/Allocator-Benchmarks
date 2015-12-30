@@ -58,12 +58,6 @@ CXXFLAGS_BDE = $(DEBUG) $(OPTIM) $(LTO) $(DEFS) $(STDLIB)
 CXXFLAGS_LOCAL = $(CXXFLAGS_BDE) -std=c++14 $(INCLUDES) $(CXXFLAGS)
 LDFLAGS_LOCAL = $(LIBS) $(LDFLAGS)
 
-clean:
-	rm -rf $(BINARIES) bde-tag $(BSLSRC)/build growth-*-* *-result
-
-reallyclean: clean
-	rm -rf $(OUTPUT)
-
 bde-tag: Makefile
 	( \
 	cd $(BSLSRC) && \

@@ -91,7 +91,8 @@ double access_lists(VECTOR *vec, int af, int rf) {
 	return (c_end - c_start) * 1.0 / CLOCKS_PER_SEC;
 }
 
-double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf = 8) {
+template<typename VECTOR>
+double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
 	// G  = Total system size (# subsystems * elements in subsystems). Given as power of 2 (size really = 2^G)
 	// S  = Elements per subsystem. Given as power of 2 (size really = 2^S)
 	// af = Access Factor - Number of iterations through a subsystem (linked list) before moving to the next
@@ -110,9 +111,7 @@ double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf
 	std::cout << "Total number of elements per sub system (S) = 2^" << S << " (aka " << expanded_S << ")" << std::endl;
 #endif // DEBUG_V3
 
-
 	// Create data under test
-	typename vectors::def vec;
 	vec.reserve(expanded_k);
 	for (size_t i = 0; i < expanded_k; i++)
 	{
@@ -150,6 +149,42 @@ double run_combination(int G = -20, int S = 18, int af = 32, int sf = -3, int rf
 	return result;
 }
 
+void generate_table(int G, int alloc_num) {
+	int sf = 5;
+	for (int S = 21; S >= 0; S--) {
+		for (int af = 256; af >= 1; af >>= 1) {
+			int rf = AF_RF_PRODUCT / af;
+#ifdef DEBUG_V3
+			std::cout << "G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+#endif
+			int pid = fork();
+			if (pid == 0) { // Child process
+				double result = 0;
+				switch (alloc_num) {
+					case 0: {
+						typename vectors::def vec;
+						result = run_combination(G, S, af, sf, rf, vec);
+						break;
+					}
+
+					case 7: {
+						BloombergLP::bdlma::MultipoolAllocator alloc;
+						typename vectors::multipool vec(&alloc);
+						result = run_combination(G, S, af, sf, rf, vec);
+						break;
+					}
+				}
+				std::cout << result << " ";
+				exit(0);
+			}
+			else {
+				wait(NULL);
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
 
 int main(int argc, char *argv[]) {
 	// TODO: Notes:
@@ -163,27 +198,17 @@ int main(int argc, char *argv[]) {
 	AF_RF_PRODUCT;
 
 	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	generate_table(21, 0);
 
-	int G = 21;
-	int sf = 5;
-	for (int S = 21; S >= 0; S--) {
-		for (int af = 256; af >= 1; af >>= 1) {
-			int rf = AF_RF_PRODUCT / af;
-#ifdef DEBUG_V3
-			std::cout << "G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
-#endif
-			int pid = fork();
-			if (pid == 0) { // Child process
-				double result = run_combination(G, S, af, sf, rf);
-				std::cout << result << " ";
-				exit(0);
-			}
-			else {
-				wait(NULL);
-			}
-		}
-		std::cout << std::endl;
-	}
+	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	generate_table(21, 7);
+
+	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	generate_table(25, 0);
+
+	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	generate_table(25, 7);
+
 
 	std::cout << "Done" << std::endl;
 }
