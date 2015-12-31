@@ -77,3 +77,9 @@ benchmark_1: benchmark_1.cc benchmark_common.h bde-tag
 
 benchmark_2: benchmark_2.cc benchmark_common.h bde-tag
 	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
+
+benchmark_3: benchmark_3.cc benchmark_common.h bde-tag
+	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
+
+benchmark_4: benchmark_4.cc benchmark_common.h bde-tag
+	$(CXX) -o $@ $(CXXFLAGS_LOCAL) $< $(LDFLAGS_LOCAL)
