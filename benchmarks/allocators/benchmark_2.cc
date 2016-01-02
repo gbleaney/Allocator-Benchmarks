@@ -1,7 +1,6 @@
 // Debugging Settings
-
 #define DEBUG
-#define DEBUG_V1
+//#define DEBUG_V1
 //#define DEBUG_V2
 //#define DEBUG_V3
 //#define DEBUG_V4
@@ -52,23 +51,33 @@ int AF_RF_PRODUCT = 256;
 int AF_RF_PRODUCT = 2560;
 #endif // DEBUG
 
+template<typename ALLOC>
+class AllocSubsystem {
+public:
+	ALLOC d_alloc;
+	std::list<int, alloc_adaptor<int, ALLOC> > d_list;
+	AllocSubsystem() : d_alloc(), d_list(&d_alloc) {}
+};
+
+class DefaultSubsystem {
+public:
+	std::list<int> d_list;
+	DefaultSubsystem() : d_list() {}
+};
 
 // Convenience typedefs
-struct lists {
-	typedef std::list<int> def;
-	typedef std::list<int, typename alloc_adaptors<int>::newdel> newdel;
-	typedef std::list<int, typename alloc_adaptors<int>::monotonic> monotonic;
-	typedef std::list<int, typename alloc_adaptors<int>::multipool> multipool;
-	typedef std::list<int, bsl::allocator<int>> polymorphic;
+struct subsystems {
+	typedef DefaultSubsystem def;
+	typedef AllocSubsystem<BloombergLP::bdlma::MultipoolAllocator> multipool;
 };
 
-struct vectors {
-	typedef std::vector<lists::def> def;
-	typedef std::vector<lists::newdel, typename alloc_adaptors<lists::newdel>::newdel> newdel;
-	typedef std::vector<lists::monotonic, typename alloc_adaptors<lists::monotonic>::monotonic> monotonic;
-	typedef std::vector<lists::multipool, typename alloc_adaptors<lists::multipool>::multipool> multipool;
-	typedef std::vector<lists::polymorphic, bsl::allocator<int>> polymorphic;
-};
+//struct vectors {
+//	typedef std::vector<subsystems::def> def;
+//	typedef std::vector<subsystems::newdel, typename alloc_adaptors<subsystems::newdel>::newdel> newdel;
+//	typedef std::vector<subsystems::monotonic, typename alloc_adaptors<subsystems::monotonic>::monotonic> monotonic;
+//	typedef std::vector<subsystems::multipool, typename alloc_adaptors<subsystems::multipool>::multipool> multipool;
+//	typedef std::vector<subsystems::polymorphic, bsl::allocator<int>> polymorphic;
+//};
 
 template<typename VECTOR>
 double access_lists(VECTOR *vec, int af, int rf) {
@@ -81,7 +90,7 @@ double access_lists(VECTOR *vec, int af, int rf) {
 	for (size_t r = 0; r < rf; r++)	{
 		for (size_t i = 0; i < vec->size(); i++) {
 			for (size_t a = 0; a < af; a++) {
-				for (auto it = (*vec)[i].begin(); it != (*vec)[i].end(); ++it) {
+				for (auto it = (*vec)[i]->d_list.begin(); it != (*vec)[i]->d_list.end(); ++it) {
 					(*it)++; // Increment int to cause loop to have some effect
 				}
 				clobber(); // TODO will this hurt caching?
@@ -92,8 +101,8 @@ double access_lists(VECTOR *vec, int af, int rf) {
 	return (c_end - c_start) * 1.0 / CLOCKS_PER_SEC;
 }
 
-template<typename VECTOR>
-double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
+template<typename SUBSYS>
+double run_combination(int G, int S, int af, int sf, int rf) {
 	// G  = Total system size (# subsystems * elements in subsystems). Given as power of 2 (size really = 2^G)
 	// S  = Elements per subsystem. Given as power of 2 (size really = 2^S)
 	// af = Access Factor - Number of iterations through a subsystem (linked list) before moving to the next
@@ -112,20 +121,29 @@ double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
 	std::cout << "Total number of elements per sub system (S) = 2^" << S << " (aka " << expanded_S << ")" << std::endl;
 #endif // DEBUG_V3
 
+	std::vector<SUBSYS *> vec;
+
 	// Create data under test
 	vec.reserve(expanded_k);
-	for (size_t i = 0; i < expanded_k; i++)
-	{
-		vec.emplace_back(vec.get_allocator());
+	for (size_t i = 0; i < expanded_k; i++)	{
+		vec.emplace_back(new SUBSYS()); // Never deallocated because we exit immediately after this function reutrns anyway
+
 		for (size_t j = 0; j < expanded_S; j++)
 		{
-			vec.back().emplace_back((int)j);
+			vec.back()->d_list.emplace_back((int)j);
 		}
 	}
+
+#ifdef DEBUG_V3
+	std::cout << "Created vector with " << vec.size() << " elements" << std::endl;
+#endif // DEBUG_V3
 
 	double result = 0.0;
 	if (sf < 0) {
 		// Access the data
+#ifdef DEBUG_V3
+		std::cout << "Accessing data BEFORE shuffling" << std::endl;
+#endif // DEBUG_V3
 		result = access_lists(&vec, af, rf);
 	}
 
@@ -138,13 +156,16 @@ double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
 	for (size_t i = 0; i < std::abs(sf); i++) {
 		for (size_t j = 0; j < vec.size(); j++)	{
-			vec[position_distribution(generator)].emplace_back(vec[j].front());
-			vec[j].pop_front();
+			vec[position_distribution(generator)]->d_list.emplace_back(vec[j]->d_list.front());
+			vec[j]->d_list.pop_front();
 		}
 	}
 
 	if (sf > 0) {
 		// Access the data
+#ifdef DEBUG_V3
+		std::cout << "Accessing data AFTER shuffling" << std::endl;
+#endif // DEBUG_V3
 		result = access_lists(&vec, af, rf);
 	}
 	return result;
@@ -152,7 +173,7 @@ double run_combination(int G, int S, int af, int sf, int rf, VECTOR vec) {
 
 void generate_table(int G, int alloc_num) {
 	int sf = 5;
-	for (int S = 21; S >= 0; S--) {
+	for (int S = 21; S >= 0; S--) { // S = 21
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
 #ifdef DEBUG_V3
@@ -163,15 +184,12 @@ void generate_table(int G, int alloc_num) {
 				double result = 0;
 				switch (alloc_num) {
 					case 0: {
-						typename vectors::def vec;
-						result = run_combination(G, S, af, sf, rf, vec);
+						result = run_combination<typename subsystems::def>(G, S, af, sf, rf);
 						break;
 					}
 
 					case 7: {
-						BloombergLP::bdlma::MultipoolAllocator alloc;
-						typename vectors::multipool vec(&alloc);
-						result = run_combination(G, S, af, sf, rf, vec);
+						result = run_combination<typename subsystems::multipool>(G, S, af, sf, rf);
 						break;
 					}
 				}
@@ -195,7 +213,14 @@ int main(int argc, char *argv[]) {
 	// For baseline, G = 10^7, af = 10
 
 	std::cout << "Started" << std::endl;
+	
+	//std::vector<typename subsystems::def> vec;
+	//std::allocator<int> alloc;
+	//vec.emplace_back(alloc);
 
+	//std::vector<typename subsystems::multipool> vec_1;
+	//BloombergLP::bdlma::MultipoolAllocator alloc_1;
+	//vec_1.emplace_back(alloc_1);
 
 	//{
 	//	std::cout << "Creating allocator" << std::endl;
@@ -214,14 +239,14 @@ int main(int argc, char *argv[]) {
 	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
 	generate_table(21, 0);
 
+	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	//generate_table(25, 0);
+
 	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
 	generate_table(21, 7);
 
-	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	generate_table(25, 0);
-
-	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	generate_table(25, 7);
+	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	//generate_table(25, 7);
 
 	std::cout << "Done" << std::endl;
 }
