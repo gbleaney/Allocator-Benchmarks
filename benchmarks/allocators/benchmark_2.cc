@@ -168,12 +168,19 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 #endif // DEBUG_V3
 		result = access_lists(&vec, af, rf);
 	}
+
+	for (size_t i = 0; i < vec.size(); i++)
+	{
+		delete vec[i];
+	}
+
 	return result;
 }
 
 void generate_table(int G, int alloc_num) {
 	int sf = 5;
-	for (int S = 21; S >= 0; S--) { // S = 21
+	for (int S = 3; S >= 0; S--) { // S = 21
+		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
 #ifdef DEBUG_V3
@@ -193,11 +200,15 @@ void generate_table(int G, int alloc_num) {
 						break;
 					}
 				}
-				std::cout << result << " ";
+				std::cout << result << " " << std::flush;
 				exit(0);
 			}
 			else {
-				wait(NULL);
+				int error;
+				wait(&error);
+				if (error) {
+					std::cout << "Error code " << error << "at G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+				}
 			}
 		}
 		std::cout << std::endl;
@@ -236,8 +247,8 @@ int main(int argc, char *argv[]) {
 	//	std::cout << "Destroying Vector/List" << std::endl;
 	//}
 
-	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
-	generate_table(21, 0);
+	//std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	//generate_table(21, 0);
 
 	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
 	//generate_table(25, 0);
