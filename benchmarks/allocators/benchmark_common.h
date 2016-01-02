@@ -14,6 +14,11 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <bsl_memory.h>
+#include <bslma_newdeleteallocator.h>
+#include <bdlma_bufferedsequentialallocator.h>
+#include <bdlma_multipoolallocator.h>
+
 // Debugging
 #include <typeinfo>
 #include <assert.h>
