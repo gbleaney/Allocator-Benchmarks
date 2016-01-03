@@ -52,7 +52,7 @@ void run_allocation(const unsigned long long T_bytes, const unsigned long long A
 	{
 		unsigned long long idx = i % A_count;
 		alloc.deallocate(allocated[idx], S_bytes);
-		allocated.emplace(allocated.begin() + idx, alloc.allocate(S_bytes));
+		allocated[idx] = alloc.allocate(S_bytes);
 		++(*allocated[idx]);
 		if (idx == A_count - 1) {
 #ifdef DEBUG_V2
@@ -67,9 +67,9 @@ void run_allocation(const unsigned long long T_bytes, const unsigned long long A
 	std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 
 #ifdef DEBUG_V2
-	std::cout << "Deallocating remaining " << allocated.size() << " chunks" << std::endl;
+	std::cout << "Deallocating remaining " << A_count << " chunks" << std::endl;
 #endif // DEBUG_V2
-	for (unsigned long long i = 0; i < allocated.size(); i++) {
+	for (unsigned long long i = 0; i < A_count; i++) {
 		alloc.deallocate(allocated[i], S_bytes);
 	}
 }
@@ -88,7 +88,7 @@ void run_row(size_t T, size_t A, size_t S) {
 	std::cout << "T: 2^" << T << "=" << expanded_T << " A: 2^" << A << "=" << expanded_A << " S: 2^" << S << "=" << expanded_S << " Chunks: " << chunks << std::endl;
 #endif // DEBUG_V1
 
-	std::cout << "T=2^" << T << " A=2^" << A << " S=2^" << S << std::flush;
+	std::cout << "T=2^" << T << " A=2^" << A << " S=2^" << S << " " << std::flush;
 
 	for (size_t i = 0; i < 8; i++)
 	{
@@ -171,10 +171,30 @@ void run_row(size_t T, size_t A, size_t S) {
 			int error;
 			wait(&error);
 			if (error) {
+#ifdef DEBUG_V1
 				std::cout << "Error code " << error << "at T: " << T << " A: " << A << " S: " << S << std::endl;
+#endif // DEBUG_V1
+				std::cout << "FAIL " << std::flush;
 			}
 		}
 	}
+
+	std::cout << std::endl;
+}
+
+void run_table(size_t T) {
+	std::cout << std::endl << "Running table of memory size 2^" << T << " bytes" << std::endl;
+	run_row(T, 15, 10);
+	run_row(T, 16, 10);
+	run_row(T, 17, 10);
+	run_row(T, 18, 10);
+	run_row(T, 19, 10);
+	run_row(T, 20, 10);
+	run_row(T, 20, 11);
+	run_row(T, 20, 12);
+	run_row(T, 20, 13);
+	run_row(T, 20, 14);
+	run_row(T, 20, 15);
 }
 
 int main(int argc, char *argv[]) {
@@ -182,7 +202,12 @@ int main(int argc, char *argv[]) {
 	// 1) Providing pre-allocated pool to monotonic - best size? Does it even make sense?
 	std::cout << "Started" << std::endl;
 	
-	run_row(30, 15, 10);
+	run_table(30);
+	run_table(31);
+	run_table(32);
+	run_table(33);
+	run_table(34);
+	run_table(35);
 
 	std::cout << "Done" << std::endl;
 }
