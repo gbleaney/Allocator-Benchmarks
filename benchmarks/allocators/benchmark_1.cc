@@ -46,7 +46,7 @@ const size_t RANDOM_LENGTH_MIN = 33;
 const size_t RANDOM_LENGTH_MAX = 1000;
 
 
-alignas(long long) static char pool[1 << 30];
+alignas(long long) static char pool[1ull << 30];
 char random_data[RANDOM_SIZE];
 size_t random_positions[RANDOM_DATA_POINTS];
 size_t random_lengths[RANDOM_DATA_POINTS];
@@ -635,8 +635,8 @@ void run_base_loop(void (*func)(unsigned long long, size_t), std::string header)
 #endif // DEBUG
 
 
-	for (size_t elements = 1 << 6; elements <= 1 << max_element_exponent; elements <<= 1) {
-		unsigned long long iterations = (1 << max_element_iteration_product_exponent) / elements;
+	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
+		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
 		func(iterations, elements);
 	}
 }
@@ -652,8 +652,8 @@ void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header
 #endif // DEBUG
 
 
-	for (size_t elements = 1 << 6; elements <= 1 << max_element_exponent; elements <<= 1) {
-		unsigned long long iterations = (1 << max_element_iteration_product_exponent) / elements;
+	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
+		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
 		func(iterations, elements);
 	}
 }
