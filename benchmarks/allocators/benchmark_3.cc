@@ -16,32 +16,49 @@
 alignas(long long) static char pool[1ull << 30];
 
 template<typename ALLOC>
-void run_allocation(const unsigned long long expanded_T, const unsigned long long expanded_A, const unsigned long long expanded_S, ALLOC alloc) {
-	// expanded_T = Total amount of memory to be allocated
-	// expanded_A = Active memory. The maximum amount of memory to be allocated at a time
-	// expanded_S = Size in bytes of chunk to be allocated
+void run_allocation(const unsigned long long T_bytes, const unsigned long long A_bytes, const unsigned long long S_bytes, ALLOC alloc) {
+	// T_bytes = Total amount of memory to be allocated
+	// A_bytes = Active memory. The maximum amount of memory to be allocated at a time
+	// S_bytes = Size in bytes of chunk to be allocated
 	// alloc = Allocator to be used to allocate memory
 
+#ifdef DEBUG_V2
+	std::cout << "Running Allocation" << std::endl;
+#endif // DEBUG_V2
+
+	const unsigned long long A_count = A_bytes / S_bytes;
+	const unsigned long long remaining_count = (T_bytes - A_bytes) / S_bytes;
+
 	std::vector<char *> allocated;
-	allocated.reserve(expanded_A);
+	allocated.reserve(A_count);
 
 	escape(allocated.data());
 
 	std::clock_t c_start = std::clock();
 	
-	for (unsigned long long i = 0; i < expanded_A; i++)	{
-		allocated.emplace_back(alloc.allocate(expanded_S));
+#ifdef DEBUG_V2
+	std::cout << "Running initial allocation for " << allocated.size() << " chunks of " << S_bytes << " bytes" << std::endl;
+#endif // DEBUG_V2
+	for (unsigned long long i = 0; i < A_count; i++)	{
+		allocated.emplace_back(alloc.allocate(S_bytes));
 		++(*allocated[i]);
 	}
 	clobber();
 
-	for (unsigned long long i = 0; i < (expanded_T - expanded_A)/expanded_S; i++)
+#ifdef DEBUG_V2
+	std::cout << "Running additional allocation for " << remaining_count << " chunks of " << S_bytes << " bytes" << std::endl;
+#endif // DEBUG_V2
+	for (unsigned long long i = 0; i < remaining_count; i++)
 	{
-		unsigned long long idx = i % expanded_A;
-		alloc.deallocate(allocated[idx], expanded_S);
-		allocated.emplace(allocated.begin() + idx, alloc.allocate(expanded_S));
+		unsigned long long idx = i % A_count;
+		alloc.deallocate(allocated[idx], S_bytes);
+		allocated.emplace(allocated.begin() + idx, alloc.allocate(S_bytes));
 		++(*allocated[idx]);
-		if (idx == (expanded_T - expanded_A) / expanded_S - 1) {
+		if (idx == A_count - 1) {
+#ifdef DEBUG_V2
+			std::cout << "Clobbering memory after reaching index " << i << " in loop (" << idx << " in vector)" << std::endl;
+			std::cout << "Clobber number: " << i / idx << std::endl;
+#endif // DEBUG_V2
 			clobber();
 		}
 	}
@@ -49,8 +66,11 @@ void run_allocation(const unsigned long long expanded_T, const unsigned long lon
 	std::clock_t c_end = std::clock();
 	std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 
-	for (unsigned long long i = 0; i < expanded_A; i++) {
-		alloc.deallocate(allocated[i], expanded_S);
+#ifdef DEBUG_V2
+	std::cout << "Deallocating remaining " << allocated.size() << " chunks" << std::endl;
+#endif // DEBUG_V2
+	for (unsigned long long i = 0; i < allocated.size(); i++) {
+		alloc.deallocate(allocated[i], S_bytes);
 	}
 }
 
@@ -77,42 +97,66 @@ void run_row(size_t T, size_t A, size_t S) {
 			switch (i)
 			{
 			case 0: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS1" << std::endl;
+#endif // DEBUG_V2
 				std::allocator<char> alloc;
 				run_allocation<std::allocator<char>>(expanded_T, expanded_A, expanded_S, alloc);
 				break;
 			}
 			case 1: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS2" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bslma::NewDeleteAllocator alloc;
 				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 2: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS3" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
 				run_allocation<typename alloc_adaptors<char>::monotonic>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 3: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS5" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
 				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 4: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS7" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::MultipoolAllocator alloc;
 				run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 5: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS9" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::MultipoolAllocator alloc;
 				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 6: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS11" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
 				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
 				run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
 				break;
 			}
 			case 7: {
+#ifdef DEBUG_V2
+				std::cout << std::endl << "AS13" << std::endl;
+#endif // DEBUG_V2
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
 				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
 				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
