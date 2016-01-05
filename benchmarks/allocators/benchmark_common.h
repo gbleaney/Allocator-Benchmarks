@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <memory.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include <bsl_memory.h>
 #include <bslma_newdeleteallocator.h>

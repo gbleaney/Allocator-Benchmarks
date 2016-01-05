@@ -6,6 +6,8 @@
 //#define DEBUG_V4
 
 #include <iostream>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "benchmark_common.h"
 
