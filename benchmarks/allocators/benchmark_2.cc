@@ -1,8 +1,8 @@
 // Debugging Settings
-//#define DEBUG
-//#define DEBUG_V1
-//#define DEBUG_V2
-//#define DEBUG_V3
+#define DEBUG
+#define DEBUG_V1
+#define DEBUG_V2
+#define DEBUG_V3
 //#define DEBUG_V4
 
 #include <iostream>
@@ -19,6 +19,7 @@
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <math.h>
 
 
@@ -152,8 +153,36 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
 	for (size_t i = 0; i < std::abs(sf); i++) {
 		for (size_t j = 0; j < vec.size(); j++)	{
-			vec[position_distribution(generator)]->d_list.emplace_back(vec[j]->d_list.front());
-			vec[j]->d_list.pop_front();
+			if(j%100000 == 0)
+			{
+				std::cout << "j:" << j << std::endl;
+			}
+#ifdef DEBUG_V4
+			std::cout << "Generating position" << std::endl;
+#endif // DEBUG_V4
+			size_t pos = position_distribution(generator);
+
+			if (vec[j]->d_list.size() > 0) { // TODO: not quite what is in the paper
+#ifdef DEBUG_V4
+				std::cout << "Grabbing front element of list at " << j << std::endl;
+#endif // DEBUG_V4
+				int popped = vec[j]->d_list.front();
+
+#ifdef DEBUG_V4
+				std::cout << "Emplacing " << popped << " into list at " << pos << std::endl;
+#endif // DEBUG_V4
+				vec[pos]->d_list.emplace_back(popped);
+
+#ifdef DEBUG_V4
+				std::cout << "Popping from front of list at " << j << " with " << vec[j]->d_list.size() << " elements" << std::endl;
+#endif // DEBUG_V4
+				vec[j]->d_list.pop_front();
+			}
+
+
+#ifdef DEBUG_V4
+			std::cout << "Finished iteration" << std::endl;
+#endif // DEBUG_V4
 		}
 	}
 
@@ -183,7 +212,7 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 
 void generate_table(int G, int alloc_num) {
 	int sf = 5;
-	for (int S = 2; S >= 0; S--) { // S = 21
+	for (int S = 0; S >= 0; S--) { // S = 21
 		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
@@ -224,11 +253,39 @@ int main(int argc, char *argv[]) {
 	// TODO: Notes:
 	// 1) Incremented int by 1 on each iteration of af, to prevent compiler optimizing away loop (also used Chandler's
 	//    optimizer-defeating functions to access the ints after each iteration -- could this be a problem with caching?)
+	// 2) Couldn't follow paper exactly, because popping off subsystems iteratively (then pushing randmonly) means that on
+	//    2nd (and further) iterations through the list, some subsystems will not have an element to pop.
 
 	// For baseline, G = 10^7, af = 10
 
 	std::cout << "Started" << std::endl;
-	
+
+	//size_t default_subsystem_size = sizeof(subsystems::def);
+	//size_t alloc_subsystem_size = sizeof(subsystems::multipool);
+	//size_t list_size = sizeof(subsystems::multipool::d_list);
+	//size_t int_size = sizeof(int);
+	//size_t ptr_size = sizeof(void *);
+
+	//int G = 20;
+
+	//std::cout << "Object Sizes" << std::endl;
+	//std::cout << "Def: " << default_subsystem_size << " Alloc: " << alloc_subsystem_size << " List: " << list_size << " Int: " << int_size << " Pointer: " << ptr_size << std::endl;
+	//
+	//std::cout << "Total Sizes: " << std::endl;
+	//std::cout << "Def: " << default_subsystem_size*(1 << G) << " Alloc: " << alloc_subsystem_size*(1 << G) << " List: " << list_size*(1 << G) << " Int: " << int_size*(1 << G) << " Pointer: " << ptr_size*(1 << G)*2 << std::endl;
+
+	//std::cout << "Total Usage" << std::endl;
+	//std::cout << default_subsystem_size*(1 << G) + int_size*(1 << G) + 2 * ptr_size*(1 << G) << std::endl;
+
+	//struct rlimit rlim;
+	//getrlimit(RLIMIT_AS, &rlim);
+
+	//std::cout << "Limit: " << rlim.rlim_cur << std::endl;
+	//	
+	//char * arr = new char[92274688];
+	//escape(arr);
+	//arr[92274687] = 0;
+
 	//std::vector<typename subsystems::def> vec;
 	//std::allocator<int> alloc;
 	//vec.emplace_back(alloc);
@@ -254,16 +311,16 @@ int main(int argc, char *argv[]) {
 	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
 	generate_table(21, 0);
 
-	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	generate_table(25, 0);
+	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	//generate_table(25, 0);
 
-	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
-	generate_table(21, 7);
+	//std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	//generate_table(21, 7);
 
-	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	generate_table(25, 7);
+	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	//generate_table(25, 7);
 
-	run_combination<typename subsystems::multipool>(2, 1, 5, 5, 5);
+	//run_combination<typename subsystems::multipool>(2, 1, 5, 5, 5);
 
 	std::cout << "Done" << std::endl;
 }
