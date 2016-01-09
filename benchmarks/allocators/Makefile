@@ -43,7 +43,7 @@ INCLUDES = \
 
 DEFS = -D_REENTRANT -D_POSIX_PTHREAD_SEMANTICS -DBSLS_IDENT_OFF
 WAFCONFIGARGS = \
-    --abi-bits=64 --cpp11 --build-type release \
+    --abi-bits=64 --cpp-std=11 --build-type release \
 #    --assert-level=none $(PARALLEL) 
 
 LIBS = \
