@@ -1,8 +1,8 @@
 // Debugging Settings
-#define DEBUG
-#define DEBUG_V1
-#define DEBUG_V2
-#define DEBUG_V3
+//#define DEBUG
+//#define DEBUG_V1
+//#define DEBUG_V2
+//#define DEBUG_V3
 //#define DEBUG_V4
 
 #include <iostream>
@@ -153,10 +153,7 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
 	for (size_t i = 0; i < std::abs(sf); i++) {
 		for (size_t j = 0; j < vec.size(); j++)	{
-			if(j%100000 == 0)
-			{
-				std::cout << "j:" << j << std::endl;
-			}
+
 #ifdef DEBUG_V4
 			std::cout << "Generating position" << std::endl;
 #endif // DEBUG_V4
@@ -204,7 +201,7 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 
 void generate_table(int G, int alloc_num) {
 	int sf = 5;
-	for (int S = 0; S >= 0; S--) { // S = 21
+	for (int S = 21; S >= 0; S--) { // S = 21
 		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
