@@ -194,14 +194,6 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 		result = access_lists(&vec, af, rf);
 	}
 
-#ifdef DEBUG_V3
-	std::cout << "Deleting memory from vecor" << std::endl;
-#endif // DEBUG_V3
-
-	//for (size_t i = 0; i < vec.size(); i++)
-	//{
-	//	delete vec[i];
-	//}
 
 #ifdef DEBUG_V3
 	std::cout << "Done running combination" << std::endl;
@@ -260,67 +252,17 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	//size_t default_subsystem_size = sizeof(subsystems::def);
-	//size_t alloc_subsystem_size = sizeof(subsystems::multipool);
-	//size_t list_size = sizeof(subsystems::multipool::d_list);
-	//size_t int_size = sizeof(int);
-	//size_t ptr_size = sizeof(void *);
-
-	//int G = 20;
-
-	//std::cout << "Object Sizes" << std::endl;
-	//std::cout << "Def: " << default_subsystem_size << " Alloc: " << alloc_subsystem_size << " List: " << list_size << " Int: " << int_size << " Pointer: " << ptr_size << std::endl;
-	//
-	//std::cout << "Total Sizes: " << std::endl;
-	//std::cout << "Def: " << default_subsystem_size*(1 << G) << " Alloc: " << alloc_subsystem_size*(1 << G) << " List: " << list_size*(1 << G) << " Int: " << int_size*(1 << G) << " Pointer: " << ptr_size*(1 << G)*2 << std::endl;
-
-	//std::cout << "Total Usage" << std::endl;
-	//std::cout << default_subsystem_size*(1 << G) + int_size*(1 << G) + 2 * ptr_size*(1 << G) << std::endl;
-
-	//struct rlimit rlim;
-	//getrlimit(RLIMIT_AS, &rlim);
-
-	//std::cout << "Limit: " << rlim.rlim_cur << std::endl;
-	//	
-	//char * arr = new char[92274688];
-	//escape(arr);
-	//arr[92274687] = 0;
-
-	//std::vector<typename subsystems::def> vec;
-	//std::allocator<int> alloc;
-	//vec.emplace_back(alloc);
-
-	//std::vector<typename subsystems::multipool> vec_1;
-	//BloombergLP::bdlma::MultipoolAllocator alloc_1;
-	//vec_1.emplace_back(alloc_1);
-
-	//{
-	//	std::cout << "Creating allocator" << std::endl;
-	//	BloombergLP::bdlma::MultipoolAllocator alloc;
-	//	std::cout << "Creating Vector" << std::endl;
-	//	typename vectors::multipool vector(&alloc);
-	//	std::cout << "Creating List" << std::endl;
-	//	vector.emplace_back(&alloc);
-	//	std::cout << "Adding to list" << std::endl;
-	//	vector[0].push_back(3);
-	//	std::cout << "Reading from List/Vector" << std::endl;
-	//	std::cout << vector[0].back() << std::endl;
-	//	std::cout << "Destroying Vector/List" << std::endl;
-	//}
-
 	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
 	generate_table(21, 0);
 
-	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	//generate_table(25, 0);
+	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	generate_table(25, 0);
 
-	//std::cout << "Problem Size 2^21 With Allocators" << std::endl;
-	//generate_table(21, 7);
+	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	generate_table(21, 7);
 
-	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	//generate_table(25, 7);
-
-	//run_combination<typename subsystems::multipool>(2, 1, 5, 5, 5);
+	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	generate_table(25, 7);
 
 	std::cout << "Done" << std::endl;
 }
