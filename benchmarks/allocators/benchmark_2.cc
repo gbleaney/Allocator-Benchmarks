@@ -1,5 +1,5 @@
 // Debugging Settings
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_V1
 //#define DEBUG_V2
 //#define DEBUG_V3
@@ -71,14 +71,6 @@ struct subsystems {
 	typedef AllocSubsystem<BloombergLP::bdlma::MultipoolAllocator> multipool;
 };
 
-//struct vectors {
-//	typedef std::vector<subsystems::def> def;
-//	typedef std::vector<subsystems::newdel, typename alloc_adaptors<subsystems::newdel>::newdel> newdel;
-//	typedef std::vector<subsystems::monotonic, typename alloc_adaptors<subsystems::monotonic>::monotonic> monotonic;
-//	typedef std::vector<subsystems::multipool, typename alloc_adaptors<subsystems::multipool>::multipool> multipool;
-//	typedef std::vector<subsystems::polymorphic, bsl::allocator<int>> polymorphic;
-//};
-
 template<typename VECTOR>
 double access_lists(VECTOR *vec, int af, int rf) {
 #ifdef DEBUG_V3
@@ -98,6 +90,10 @@ double access_lists(VECTOR *vec, int af, int rf) {
 		}
 	}
 	std::clock_t c_end = std::clock();
+
+#ifdef DEBUG_V3
+	std::cout << "Finished accessing Lists" << std::endl;
+#endif // DEBUG_V3
 	return (c_end - c_start) * 1.0 / CLOCKS_PER_SEC;
 }
 
@@ -169,17 +165,25 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 		result = access_lists(&vec, af, rf);
 	}
 
-	for (size_t i = 0; i < vec.size(); i++)
-	{
-		delete vec[i];
-	}
+#ifdef DEBUG_V3
+	std::cout << "Deleting memory from vecor" << std::endl;
+#endif // DEBUG_V3
+
+	//for (size_t i = 0; i < vec.size(); i++)
+	//{
+	//	delete vec[i];
+	//}
+
+#ifdef DEBUG_V3
+	std::cout << "Done running combination" << std::endl;
+#endif // DEBUG_V3
 
 	return result;
 }
 
 void generate_table(int G, int alloc_num) {
 	int sf = 5;
-	for (int S = 3; S >= 0; S--) { // S = 21
+	for (int S = 2; S >= 0; S--) { // S = 21
 		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
@@ -247,17 +251,17 @@ int main(int argc, char *argv[]) {
 	//	std::cout << "Destroying Vector/List" << std::endl;
 	//}
 
-	//std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
-	//generate_table(21, 0);
+	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	generate_table(21, 0);
 
-	//std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	//generate_table(25, 0);
+	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	generate_table(25, 0);
 
-	//std::cout << "Problem Size 2^21 With Allocators" << std::endl;
-	//generate_table(21, 7);
+	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	generate_table(21, 7);
 
-	//std::cout << "Problem Size 2^25 With Allocators" << std::endl;
-	//generate_table(25, 7);
+	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	generate_table(25, 7);
 
 	run_combination<typename subsystems::multipool>(2, 1, 5, 5, 5);
 
