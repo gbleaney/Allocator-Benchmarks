@@ -100,7 +100,7 @@ double access_lists(VECTOR *vec, int af, int rf) {
 
 template<typename SUBSYS>
 double run_combination(int G, int S, int af, int sf, int rf) {
-	// G  = Total system size (# subsystems * elements in subsystems). Given as power of 2 (size really = 2^G)
+	// G  = Total system size (# subsystems * elements per subsystem). Given as power of 2 (size really = 2^G)
 	// S  = Elements per subsystem. Given as power of 2 (size really = 2^S)
 	// af = Access Factor - Number of iterations through a subsystem (linked list) before moving to the next
 	// sf = Shuffle Factor - Number of elements popped from each list and pushed to a randomly chosen list
@@ -152,34 +152,35 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
 	for (size_t i = 0; i < std::abs(sf); i++) {
-		for (size_t j = 0; j < vec.size(); j++)	{
+		for (size_t element_idx = 0; element_idx < expanded_k; element_idx++) {
+			for (size_t subsystem_idx = 0; subsystem_idx < vec.size(); subsystem_idx++) {
 
 #ifdef DEBUG_V4
-			std::cout << "Generating position" << std::endl;
+				std::cout << "Generating position" << std::endl;
 #endif // DEBUG_V4
-			size_t pos = position_distribution(generator);
+				size_t pos = position_distribution(generator);
 
-			if (vec[j]->d_list.size() > 0) { // TODO: not quite what is in the paper
+				if (vec[subsystem_idx]->d_list.size() > 0) { // TODO: not quite what is in the paper
 #ifdef DEBUG_V4
-				std::cout << "Grabbing front element of list at " << j << std::endl;
+					std::cout << "Grabbing front element of list at " << subsystem_idx << std::endl;
 #endif // DEBUG_V4
-				int popped = vec[j]->d_list.front();
-
-#ifdef DEBUG_V4
-				std::cout << "Emplacing " << popped << " into list at " << pos << std::endl;
-#endif // DEBUG_V4
-				vec[pos]->d_list.emplace_back(popped);
+					int popped = vec[subsystem_idx]->d_list.front();
 
 #ifdef DEBUG_V4
-				std::cout << "Popping from front of list at " << j << " with " << vec[j]->d_list.size() << " elements" << std::endl;
+					std::cout << "Emplacing " << popped << " into list at " << pos << std::endl;
 #endif // DEBUG_V4
-				vec[j]->d_list.pop_front();
+					vec[pos]->d_list.emplace_back(popped);
+
+#ifdef DEBUG_V4
+					std::cout << "Popping from front of list at " << subsystem_idx << " with " << vec[subsystem_idx]->d_list.size() << " elements" << std::endl;
+#endif // DEBUG_V4
+					vec[subsystem_idx]->d_list.pop_front();
+				}
+
+#ifdef DEBUG_V4
+				std::cout << "Finished iteration" << std::endl;
+#endif // DEBUG_V4
 			}
-
-
-#ifdef DEBUG_V4
-			std::cout << "Finished iteration" << std::endl;
-#endif // DEBUG_V4
 		}
 	}
 

@@ -1,3 +1,5 @@
+//#define DEBUG
+//#define DEBUG_V4
 
 #include <iostream>
 #include <iomanip>
@@ -35,9 +37,6 @@
 #include <assert.h>
 
 using namespace BloombergLP;
-
-#define DEBUG
-//#define DEBUG_V4
 
 // Global Variables
 const size_t RANDOM_SIZE = 1000000;
