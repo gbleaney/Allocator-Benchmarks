@@ -252,11 +252,11 @@ int main(int argc, char *argv[]) {
 	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
 	generate_table(21, 0);
 
-	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
-	generate_table(25, 0);
-
 	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
 	generate_table(21, 7);
+
+	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	generate_table(25, 0);
 
 	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
 	generate_table(25, 7);
