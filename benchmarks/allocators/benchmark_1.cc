@@ -710,11 +710,11 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 	std::cout << std::endl;
 }
 
-void run_base_loop(void (*func)(unsigned long long, size_t), std::string header) {
+void run_base_loop(void(*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
 #ifdef DEBUG
-	short max_element_exponent = 10;
-	short max_element_iteration_product_exponent = 20;
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 23;
 #else
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 27;
@@ -723,6 +723,7 @@ void run_base_loop(void (*func)(unsigned long long, size_t), std::string header)
 
 	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
+		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
 		func(iterations, elements);
 	}
 }
@@ -730,8 +731,8 @@ void run_base_loop(void (*func)(unsigned long long, size_t), std::string header)
 void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
 #ifdef DEBUG
-	short max_element_exponent = 10;
-	short max_element_iteration_product_exponent = 20 - 7;
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 23 - 7;
 #else
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 27 - 7;
@@ -740,6 +741,7 @@ void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header
 
 	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
+		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
 		func(iterations, elements);
 	}
 }
@@ -751,31 +753,31 @@ int main(int argc, char *argv[]) {
 	std::cout << std::endl << "Generating random numbers" << std::endl;
 	fill_random();
 
-	//run_base_loop(&run_base_allocations<typename containers::DS1,
-	//	typename combined_containers::DS1_mono,
-	//	typename combined_containers::DS1_multi,
-	//	typename combined_containers::DS1_poly,
-	//	process_DS1>, "**DS1**");
-	//run_base_loop(&run_base_allocations<typename containers::DS2,
-	//	typename combined_containers::DS2_mono,
-	//	typename combined_containers::DS2_multi,
-	//	typename combined_containers::DS2_poly,
-	//	process_DS2>, "**DS2**");
-	//run_base_loop(&run_base_allocations<typename containers::DS3,
-	//	typename combined_containers::DS3_mono,
-	//	typename combined_containers::DS3_multi,
-	//	typename combined_containers::DS3_poly,
-	//	process_DS3>, "**DS3**");
-	//run_base_loop(&run_base_allocations<typename containers::DS4,
-	//	typename combined_containers::DS4_mono,
-	//	typename combined_containers::DS4_multi,
-	//	typename combined_containers::DS4_poly,
-	//	process_DS4>, "**DS4**");
-	//run_nested_loop(&run_base_allocations<typename containers::DS5,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-	//	process_DS5>, "**DS5**");
+	run_base_loop(&run_base_allocations<typename containers::DS1,
+		typename combined_containers::DS1_mono,
+		typename combined_containers::DS1_multi,
+		typename combined_containers::DS1_poly,
+		process_DS1>, "**DS1**");
+	run_base_loop(&run_base_allocations<typename containers::DS2,
+		typename combined_containers::DS2_mono,
+		typename combined_containers::DS2_multi,
+		typename combined_containers::DS2_poly,
+		process_DS2>, "**DS2**");
+	run_base_loop(&run_base_allocations<typename containers::DS3,
+		typename combined_containers::DS3_mono,
+		typename combined_containers::DS3_multi,
+		typename combined_containers::DS3_poly,
+		process_DS3>, "**DS3**");
+	run_base_loop(&run_base_allocations<typename containers::DS4,
+		typename combined_containers::DS4_mono,
+		typename combined_containers::DS4_multi,
+		typename combined_containers::DS4_poly,
+		process_DS4>, "**DS4**");
+	run_nested_loop(&run_base_allocations<typename containers::DS5,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
+		process_DS5>, "**DS5**");
 	run_nested_loop(&run_base_allocations<typename containers::DS6,
 		typename alloc_containers::DS6<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS6<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
