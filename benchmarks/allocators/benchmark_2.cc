@@ -22,17 +22,6 @@
 #include <sys/resource.h>
 #include <math.h>
 
-
-#include <bsl_memory.h>
-#include <bslma_testallocator.h>
-#include <bslma_newdeleteallocator.h>
-#include <bsls_stopwatch.h>
-
-#include <bdlma_sequentialpool.h>
-#include <bdlma_sequentialallocator.h>
-#include <bdlma_bufferedsequentialallocator.h>
-#include <bdlma_multipoolallocator.h>
-
 #include <vector>
 #include <list>
 
@@ -250,16 +239,16 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	std::cout << "Problem Size 2^21 Without Allocators" << std::endl;
+	std::cout << "Problem Size 2^21 Without Allocators (Table 16)" << std::endl;
 	generate_table(21, 0);
 
-	std::cout << "Problem Size 2^21 With Allocators" << std::endl;
+	std::cout << "Problem Size 2^21 With Allocators (Table 18)" << std::endl;
 	generate_table(21, 7);
 
-	std::cout << "Problem Size 2^25 Without Allocators" << std::endl;
+	std::cout << "Problem Size 2^25 Without Allocators (Table 17)" << std::endl;
 	generate_table(25, 0);
 
-	std::cout << "Problem Size 2^25 With Allocators" << std::endl;
+	std::cout << "Problem Size 2^25 With Allocators (Table 19)" << std::endl;
 	generate_table(25, 7);
 
 	std::cout << "Done" << std::endl;

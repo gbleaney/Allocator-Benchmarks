@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_V4
 
 #include <iostream>
@@ -60,8 +60,7 @@ void fill_random() {
 }
 
 
-// TODO will this hashing algorithm cause issues? Maybe just a singleton counter?
-
+// TODO will this hashing algorithm cause issues?
 size_t hash_value = 0;
 template <typename T>
 struct hash {
@@ -362,21 +361,15 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS1 - Global Default
 	{
-		int pid = fork();
-		if (pid == 0) {
-				PROCESSER<GLOBAL_CONT> processer;
-				c_start = std::clock();
-				for (unsigned long long i = 0; i < iterations; i++) {
-					GLOBAL_CONT container;
-					container.reserve(elements);
-					processer(&container, elements);
-				}
-				c_end = std::clock();
-				std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-				exit(0);
-		} else {
-			wait(NULL);
+		PROCESSER<GLOBAL_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			GLOBAL_CONT container;
+			container.reserve(elements);
+			processer(&container, elements);
 		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -384,23 +377,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 #endif
 	// AS2 - Global Default with Virtual
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bslma::NewDeleteAllocator alloc;
-				POLY_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bslma::NewDeleteAllocator alloc;
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 
@@ -409,23 +395,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 #endif
 	// AS3 - Monotonic
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MONO_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-				MONO_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+			MONO_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 
@@ -434,23 +413,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 #endif
 	// AS4 - Monotonic with wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MONO_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-				MONO_CONT* container = new(alloc) MONO_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MONO_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+			MONO_CONT* container = new(alloc) MONO_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -459,23 +431,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS5 - Monotonic with Virtual
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
-				POLY_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -484,23 +449,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS6 - Monotonic with Virtual and Wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
-				POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -509,23 +467,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS7 - Multipool
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MULTI_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				MULTI_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			MULTI_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -534,23 +485,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS8 - Multipool with wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MULTI_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -559,23 +503,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS9 - Multipool with Virtual
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				POLY_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -584,23 +521,16 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS10 - Multipool with Virtual and Wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::MultipoolAllocator alloc;
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -609,24 +539,17 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS11 - Multipool backed by Monotonic
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MULTI_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				MULTI_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			MULTI_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -635,24 +558,17 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS12 - Multipool backed by Monotonic with wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<MULTI_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<MULTI_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			MULTI_CONT* container = new(alloc) MULTI_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -661,24 +577,17 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS13 - Multipool backed by Monotonic with Virtual
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				POLY_CONT container(&alloc);
-				container.reserve(elements);
-				processer(&container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			POLY_CONT container(&alloc);
+			container.reserve(elements);
+			processer(&container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 #ifdef DEBUG_V1
@@ -687,24 +596,17 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 
 	// AS14 - Multipool backed by Monotonic with Virtual and Wink
 	{
-		int pid = fork();
-		if (pid == 0) {
-			PROCESSER<POLY_CONT> processer;
-			c_start = std::clock();
-			for (unsigned long long i = 0; i < iterations; i++) {
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
-				container->reserve(elements);
-				processer(container, elements);
-			}
-			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
-			exit(0);
+		PROCESSER<POLY_CONT> processer;
+		c_start = std::clock();
+		for (unsigned long long i = 0; i < iterations; i++) {
+			BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+			BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+			POLY_CONT* container = new(alloc) POLY_CONT(&alloc);
+			container->reserve(elements);
+			processer(container, elements);
 		}
-		else {
-			wait(NULL);
-		}
+		c_end = std::clock();
+		std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
 	}
 
 	std::cout << std::endl;
@@ -713,8 +615,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 void run_base_loop(void (*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
 #ifdef DEBUG
-	short max_element_exponent = 10;
-	short max_element_iteration_product_exponent = 20;
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 10;
 #else
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 27;
@@ -730,8 +632,8 @@ void run_base_loop(void (*func)(unsigned long long, size_t), std::string header)
 void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header) {
 	std::cout << header << std::endl;
 #ifdef DEBUG
-	short max_element_exponent = 10;
-	short max_element_iteration_product_exponent = 20 - 7;
+	short max_element_exponent = 16;
+	short max_element_iteration_product_exponent = 10 - 7;
 #else
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 27 - 7;
@@ -751,31 +653,31 @@ int main(int argc, char *argv[]) {
 	std::cout << std::endl << "Generating random numbers" << std::endl;
 	fill_random();
 
-	//run_base_loop(&run_base_allocations<typename containers::DS1,
-	//	typename combined_containers::DS1_mono,
-	//	typename combined_containers::DS1_multi,
-	//	typename combined_containers::DS1_poly,
-	//	process_DS1>, "**DS1**");
-	//run_base_loop(&run_base_allocations<typename containers::DS2,
-	//	typename combined_containers::DS2_mono,
-	//	typename combined_containers::DS2_multi,
-	//	typename combined_containers::DS2_poly,
-	//	process_DS2>, "**DS2**");
-	//run_base_loop(&run_base_allocations<typename containers::DS3,
-	//	typename combined_containers::DS3_mono,
-	//	typename combined_containers::DS3_multi,
-	//	typename combined_containers::DS3_poly,
-	//	process_DS3>, "**DS3**");
-	//run_base_loop(&run_base_allocations<typename containers::DS4,
-	//	typename combined_containers::DS4_mono,
-	//	typename combined_containers::DS4_multi,
-	//	typename combined_containers::DS4_poly,
-	//	process_DS4>, "**DS4**");
-	//run_nested_loop(&run_base_allocations<typename containers::DS5,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
-	//	typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-	//	process_DS5>, "**DS5**");
+	run_base_loop(&run_base_allocations<typename containers::DS1,
+		typename combined_containers::DS1_mono,
+		typename combined_containers::DS1_multi,
+		typename combined_containers::DS1_poly,
+		process_DS1>, "**DS1**");
+	run_base_loop(&run_base_allocations<typename containers::DS2,
+		typename combined_containers::DS2_mono,
+		typename combined_containers::DS2_multi,
+		typename combined_containers::DS2_poly,
+		process_DS2>, "**DS2**");
+	run_base_loop(&run_base_allocations<typename containers::DS3,
+		typename combined_containers::DS3_mono,
+		typename combined_containers::DS3_multi,
+		typename combined_containers::DS3_poly,
+		process_DS3>, "**DS3**");
+	run_base_loop(&run_base_allocations<typename containers::DS4,
+		typename combined_containers::DS4_mono,
+		typename combined_containers::DS4_multi,
+		typename combined_containers::DS4_poly,
+		process_DS4>, "**DS4**");
+	run_nested_loop(&run_base_allocations<typename containers::DS5,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
+		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
+		process_DS5>, "**DS5**");
 	run_nested_loop(&run_base_allocations<typename containers::DS6,
 		typename alloc_containers::DS6<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS6<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
