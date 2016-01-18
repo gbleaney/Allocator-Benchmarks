@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <unordered_set>
+#include <list>
 
 #include "benchmark_common.h"
 
@@ -41,6 +42,29 @@ size_t random_positions[RANDOM_DATA_POINTS];
 size_t random_lengths[RANDOM_DATA_POINTS];
 
 // Setup Functions
+class DefaultSubsystem {
+public:
+	std::list<int> d_list;
+	DefaultSubsystem() : d_list() {}
+};
+
+void create_subsystems(std::vector<std::list<int>> *vec)
+{
+	size_t vector_size = 1 << 7;
+	size_t subsystem_size = 1 << 10;
+
+	vec->reserve(vector_size);
+	for (size_t i = 0; i < vector_size; i++) {
+		vec->emplace_back(); // Never deallocated because this forked process dies, so it is irrelevant
+
+		for (size_t j = 0; j < subsystem_size; j++)
+		{
+			vec->back().emplace_back((int)j);
+		}
+	}
+}
+
+
 void fill_random() {
 	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
 	std::uniform_int_distribution<char> char_distribution(CHAR_MIN, CHAR_MAX);
@@ -365,6 +389,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<GLOBAL_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				GLOBAL_CONT container;
@@ -388,6 +414,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bslma::NewDeleteAllocator alloc;
@@ -413,6 +441,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
@@ -438,6 +468,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
@@ -463,6 +495,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
@@ -488,6 +522,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
@@ -513,6 +549,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -538,6 +576,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -563,6 +603,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -588,6 +630,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -613,6 +657,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -639,6 +685,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -665,6 +713,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -691,6 +741,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
+			std::vector<std::list<int>> vec;
+			create_subsystems(&vec);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));

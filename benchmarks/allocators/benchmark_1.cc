@@ -739,7 +739,7 @@ void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header
 #endif // DEBUG
 
 
-	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
+	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) { // TODO: 6
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
 		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
 		func(iterations, elements);
