@@ -1,5 +1,5 @@
 // Debugging Settings
-//#define DEBUG
+#define DEBUG
 //#define DEBUG_V1
 //#define DEBUG_V2
 //#define DEBUG_V3
@@ -87,6 +87,51 @@ double access_lists(VECTOR *vec, int af, int rf) {
 	return (c_end - c_start) * 1.0 / CLOCKS_PER_SEC;
 }
 
+
+template<typename VECTOR>
+void shuffle_vector(VECTOR &vec, size_t sf, size_t list_length)
+{
+	// Shuffle the data
+#ifdef DEBUG_V3
+	std::cout << "Shuffling data " << std::abs(sf) << " times" << std::endl;
+#endif // DEBUG_V3
+
+	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
+	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
+	for (size_t i = 0; i < std::abs(sf); i++) {
+		for (size_t element_idx = 0; element_idx < list_length; element_idx++) {
+			for (size_t subsystem_idx = 0; subsystem_idx < vec.size(); subsystem_idx++) {
+
+#ifdef DEBUG_V4
+				std::cout << "Generating position" << std::endl;
+#endif // DEBUG_V4
+				size_t pos = position_distribution(generator);
+
+				if (vec[subsystem_idx]->d_list.size() > 0) { // TODO: not quite what is in the paper
+#ifdef DEBUG_V4
+					std::cout << "Grabbing front element of list at " << subsystem_idx << std::endl;
+#endif // DEBUG_V4
+					int popped = vec[subsystem_idx]->d_list.front();
+
+#ifdef DEBUG_V4
+					std::cout << "Emplacing " << popped << " into list at " << pos << std::endl;
+#endif // DEBUG_V4
+					vec[pos]->d_list.emplace_back(popped);
+
+#ifdef DEBUG_V4
+					std::cout << "Popping from front of list at " << subsystem_idx << " with " << vec[subsystem_idx]->d_list.size() << " elements" << std::endl;
+#endif // DEBUG_V4
+					vec[subsystem_idx]->d_list.pop_front();
+				}
+
+#ifdef DEBUG_V4
+				std::cout << "Finished iteration" << std::endl;
+#endif // DEBUG_V4
+			}
+		}
+	}
+}
+
 template<typename SUBSYS>
 double run_combination(int G, int S, int af, int sf, int rf) {
 	// G  = Total system size (# subsystems * elements per subsystem). Given as power of 2 (size really = 2^G)
@@ -125,60 +170,22 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 #endif // DEBUG_V3
 
 	double result = 0.0;
-	if (sf < 0) {
-		// Access the data
-#ifdef DEBUG_V3
-		std::cout << "Accessing data BEFORE shuffling" << std::endl;
-#endif // DEBUG_V3
-		result = access_lists(&vec, af, rf);
-	}
-
-	// Shuffle the data
-#ifdef DEBUG_V3
-	std::cout << "Shuffling data " << std::abs(sf) << " times" << std::endl;
-#endif // DEBUG_V3
-
-	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
-	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
-	for (size_t i = 0; i < std::abs(sf); i++) {
-		for (size_t element_idx = 0; element_idx < expanded_k; element_idx++) {
-			for (size_t subsystem_idx = 0; subsystem_idx < vec.size(); subsystem_idx++) {
-
-#ifdef DEBUG_V4
-				std::cout << "Generating position" << std::endl;
-#endif // DEBUG_V4
-				size_t pos = position_distribution(generator);
-
-				if (vec[subsystem_idx]->d_list.size() > 0) { // TODO: not quite what is in the paper
-#ifdef DEBUG_V4
-					std::cout << "Grabbing front element of list at " << subsystem_idx << std::endl;
-#endif // DEBUG_V4
-					int popped = vec[subsystem_idx]->d_list.front();
-
-#ifdef DEBUG_V4
-					std::cout << "Emplacing " << popped << " into list at " << pos << std::endl;
-#endif // DEBUG_V4
-					vec[pos]->d_list.emplace_back(popped);
-
-#ifdef DEBUG_V4
-					std::cout << "Popping from front of list at " << subsystem_idx << " with " << vec[subsystem_idx]->d_list.size() << " elements" << std::endl;
-#endif // DEBUG_V4
-					vec[subsystem_idx]->d_list.pop_front();
-				}
-
-#ifdef DEBUG_V4
-				std::cout << "Finished iteration" << std::endl;
-#endif // DEBUG_V4
-			}
-		}
-	}
 
 	if (sf > 0) {
-		// Access the data
+		// Shuffle data
 #ifdef DEBUG_V3
-		std::cout << "Accessing data AFTER shuffling" << std::endl;
+		std::cout << "Shuffling data BEFORE accessing" << std::endl;
 #endif // DEBUG_V3
-		result = access_lists(&vec, af, rf);
+		shuffle_vector(vec, sf, expanded_S);
+	}
+
+	result = access_lists(&vec, af, rf);
+
+	if (sf < 0) {
+		// Shuffle data - do nothing
+#ifdef DEBUG_V3
+		std::cout << "Shuffling data AFTER accessing - doing nothing since shuffle is not timed" << std::endl;
+#endif // DEBUG_V3
 	}
 
 
@@ -189,26 +196,26 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 	return result;
 }
 
-void generate_table(int G, int alloc_num) {
+void generate_table(int G, int alloc_num, int shuffle_sign) {
 	int sf = 5;
 	for (int S = 21; S >= 0; S--) { // S = 21
 		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
 #ifdef DEBUG_V3
-			std::cout << "G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+			std::cout << "G: " << G << " S: " << S*shuffle_sign << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
 #endif
 			int pid = fork();
 			if (pid == 0) { // Child process
 				double result = 0;
 				switch (alloc_num) {
 					case 0: {
-						result = run_combination<typename subsystems::def>(G, S, af, sf, rf);
+						result = run_combination<typename subsystems::def>(G, S*shuffle_sign, af, sf, rf);
 						break;
 					}
 
 					case 7: {
-						result = run_combination<typename subsystems::multipool>(G, S, af, sf, rf);
+						result = run_combination<typename subsystems::multipool>(G, S*shuffle_sign, af, sf, rf);
 						break;
 					}
 				}
@@ -219,7 +226,7 @@ void generate_table(int G, int alloc_num) {
 				int error;
 				wait(&error);
 				if (error) {
-					std::cout << "Error code " << error << "at G: " << G << " S: " << S << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+					std::cout << "Error code " << error << "at G: " << G << " S: " << S*shuffle_sign << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
 				}
 			}
 		}
@@ -239,17 +246,29 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	std::cout << "Problem Size 2^21 Without Allocators (Table 16)" << std::endl;
-	generate_table(21, 0);
+	std::cout << "Problem Size 2^21 Without Allocators (Table 16) +ve shuffle" << std::endl;
+	generate_table(21, 0, 1);
 
-	std::cout << "Problem Size 2^21 With Allocators (Table 18)" << std::endl;
-	generate_table(21, 7);
+	std::cout << "Problem Size 2^21 Without Allocators (Table 16) -ve shuffle" << std::endl;
+	generate_table(21, 0, -1);
 
-	std::cout << "Problem Size 2^25 Without Allocators (Table 17)" << std::endl;
-	generate_table(25, 0);
+	std::cout << "Problem Size 2^21 With Allocators (Table 18) +ve shuffle" << std::endl;
+	generate_table(21, 7, 1);
 
-	std::cout << "Problem Size 2^25 With Allocators (Table 19)" << std::endl;
-	generate_table(25, 7);
+	std::cout << "Problem Size 2^21 With Allocators (Table 18) -ve shuffle" << std::endl;
+	generate_table(21, 7, -1);
+
+	std::cout << "Problem Size 2^25 Without Allocators (Table 17) +ve shuffle" << std::endl;
+	generate_table(25, 0, 1);
+
+	std::cout << "Problem Size 2^25 Without Allocators (Table 17) -ve shuffle" << std::endl;
+	generate_table(25, 0, -1);
+
+	std::cout << "Problem Size 2^25 With Allocators (Table 19) +ve shuffle" << std::endl;
+	generate_table(25, 7, 1);
+
+	std::cout << "Problem Size 2^25 With Allocators (Table 19) -ve shuffle" << std::endl;
+	generate_table(25, 7, -1);
 
 	std::cout << "Done" << std::endl;
 }
