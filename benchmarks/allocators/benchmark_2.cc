@@ -89,16 +89,16 @@ double access_lists(VECTOR *vec, int af, int rf) {
 
 
 template<typename VECTOR>
-void shuffle_vector(VECTOR &vec, size_t sf, size_t list_length)
+void shuffle_vector(VECTOR &vec, int sf, size_t list_length)
 {
 	// Shuffle the data
 #ifdef DEBUG_V3
-	std::cout << "Shuffling data " << std::abs(sf) << " times" << std::endl;
+	std::cout << "Shuffling data " << abs(sf) << " times" << std::endl;
 #endif // DEBUG_V3
 
 	std::default_random_engine generator(1); // Consistent seed to get the same (pseudo) random distribution each time
 	std::uniform_int_distribution<size_t> position_distribution(0, vec.size() - 1);
-	for (size_t i = 0; i < std::abs(sf); i++) {
+	for (size_t i = 0; i < abs(sf); i++) {
 		for (size_t element_idx = 0; element_idx < list_length; element_idx++) {
 			for (size_t subsystem_idx = 0; subsystem_idx < vec.size(); subsystem_idx++) {
 
@@ -142,7 +142,7 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 	// rf = Repeat Factor - Number of times the subsystems are iterated over
 
 
-	int k = std::abs(G) - std::abs(S);
+	int k = abs(G) - abs(S);
 	size_t expanded_S = 1, expanded_k = 1;
 	expanded_S <<= S;
 	expanded_k <<= k;
