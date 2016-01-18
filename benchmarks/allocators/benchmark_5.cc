@@ -56,11 +56,12 @@ void create_subsystems(std::vector<std::list<int>> *vec)
 	vec->reserve(vector_size);
 	for (size_t i = 0; i < vector_size; i++) {
 		vec->emplace_back(); // Never deallocated because this forked process dies, so it is irrelevant
-
+		escape(vec->back());
 		for (size_t j = 0; j < subsystem_size; j++)
 		{
 			vec->back().emplace_back((int)j);
 		}
+		escape(vec->back()); // "Use" the subsystem to fool the optimizer
 	}
 }
 
