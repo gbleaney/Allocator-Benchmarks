@@ -203,19 +203,19 @@ void generate_table(int G, int alloc_num, int shuffle_sign) {
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
 #ifdef DEBUG_V3
-			std::cout << "G: " << G << " S: " << S*shuffle_sign << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+			std::cout << "G: " << G << " S: " << S*shuffle_sign << " af: " << af << " sf: " << sf*shuffle_sign << " rf: " << rf << std::endl;
 #endif
 			int pid = fork();
 			if (pid == 0) { // Child process
 				double result = 0;
 				switch (alloc_num) {
 					case 0: {
-						result = run_combination<typename subsystems::def>(G, S*shuffle_sign, af, sf, rf);
+						result = run_combination<typename subsystems::def>(G, S, af, sf*shuffle_sign, rf);
 						break;
 					}
 
 					case 7: {
-						result = run_combination<typename subsystems::multipool>(G, S*shuffle_sign, af, sf, rf);
+						result = run_combination<typename subsystems::multipool>(G, S, af, sf*shuffle_sign, rf);
 						break;
 					}
 				}
@@ -226,7 +226,7 @@ void generate_table(int G, int alloc_num, int shuffle_sign) {
 				int error;
 				wait(&error);
 				if (error) {
-					std::cout << "Error code " << error << "at G: " << G << " S: " << S*shuffle_sign << " af: " << af << " sf: " << sf << " rf: " << rf << std::endl;
+					std::cout << "Error code " << error << "at G: " << G << " S: " << S << " af: " << af << " sf: " << sf*shuffle_sign << " rf: " << rf << std::endl;
 				}
 			}
 		}
@@ -246,29 +246,29 @@ int main(int argc, char *argv[]) {
 
 	std::cout << "Started" << std::endl;
 
-	std::cout << "Problem Size 2^21 Without Allocators (Table 16) +ve shuffle" << std::endl;
-	generate_table(21, 0, 1);
-
 	std::cout << "Problem Size 2^21 Without Allocators (Table 16) -ve shuffle" << std::endl;
 	generate_table(21, 0, -1);
 
-	std::cout << "Problem Size 2^21 With Allocators (Table 18) +ve shuffle" << std::endl;
-	generate_table(21, 7, 1);
+	std::cout << "Problem Size 2^21 Without Allocators (Table 16) +ve shuffle" << std::endl;
+	generate_table(21, 0, 1);
 
 	std::cout << "Problem Size 2^21 With Allocators (Table 18) -ve shuffle" << std::endl;
 	generate_table(21, 7, -1);
 
-	std::cout << "Problem Size 2^25 Without Allocators (Table 17) +ve shuffle" << std::endl;
-	generate_table(25, 0, 1);
+	std::cout << "Problem Size 2^21 With Allocators (Table 18) +ve shuffle" << std::endl;
+	generate_table(21, 7, 1);
 
 	std::cout << "Problem Size 2^25 Without Allocators (Table 17) -ve shuffle" << std::endl;
 	generate_table(25, 0, -1);
 
-	std::cout << "Problem Size 2^25 With Allocators (Table 19) +ve shuffle" << std::endl;
-	generate_table(25, 7, 1);
+	std::cout << "Problem Size 2^25 Without Allocators (Table 17) +ve shuffle" << std::endl;
+	generate_table(25, 0, 1);
 
 	std::cout << "Problem Size 2^25 With Allocators (Table 19) -ve shuffle" << std::endl;
 	generate_table(25, 7, -1);
+
+	std::cout << "Problem Size 2^25 With Allocators (Table 19) +ve shuffle" << std::endl;
+	generate_table(25, 7, 1);
 
 	std::cout << "Done" << std::endl;
 }
