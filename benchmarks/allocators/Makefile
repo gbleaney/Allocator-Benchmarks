@@ -9,8 +9,8 @@
 # They may be overridden on the command line, e.g. for gcc 5.1 on 4 cores:
 # $ make CXX=g++ CC=gcc BDEWAF=$HOME/bde-tools/bin/waf STDLIB= PARALLEL=-j4
 
-CXX = g++ #clang++-3.6
-CC = gcc #clang-3.6
+CXX = clang++-3.6 #g++ 
+CC = clang-3.6 #gcc 
 AR = llvm-ar-3.6
 RANLIB = llvm-ranlib-3.6
 BDEWAF = waf
@@ -29,7 +29,7 @@ BSLLIB = $(BSLSRC)/build/groups/bsl
 BDLLIB = $(BSLSRC)/build/groups/bdl
 
 # comment this out for gcc-5:
-# STDLIB = -stdlib=libc++ # TODO: Clang
+STDLIB = -stdlib=libc++ # TODO: Clang
 # If libc++ was built from source (not installed from a system package),
 # then libc++abi may not have been linked into libc++. In this situation, the
 # linker must be explicitly told to include it in the link, by uncommenting
@@ -55,7 +55,7 @@ LIBS = \
 
 CFLAGS_BDE = $(DEBUG) $(OPTIM) $(LTO) $(DEFS) $(CFLAGS) -std=c99
 CXXFLAGS_BDE = $(DEBUG) $(OPTIM) $(LTO) $(DEFS) $(STDLIB)
-CXXFLAGS_LOCAL = $(CXXFLAGS_BDE) -std=c++11 $(INCLUDES) $(CXXFLAGS) # TODO: Switch back to -std=c++14?
+CXXFLAGS_LOCAL = $(CXXFLAGS_BDE) -std=c++11 $(INCLUDES) $(CXXFLAGS)
 LDFLAGS_LOCAL = $(LIBS) $(LDFLAGS)
 
 bde-tag: Makefile
