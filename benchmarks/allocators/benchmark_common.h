@@ -45,6 +45,8 @@ struct alloc_adaptor {
 	typedef const T * const_pointer;
 	typedef T& reference;
 	typedef T const& const_reference;
+	typedef size_t size_type;
+	typedef ptrdiff_t difference_type;
 	ALLOC* alloc;
 	alloc_adaptor() : alloc(nullptr) {
 #ifdef DEBUG_V4
