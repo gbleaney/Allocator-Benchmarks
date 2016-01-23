@@ -198,7 +198,7 @@ double run_combination(int G, int S, int af, int sf, int rf) {
 
 void generate_table(int G, int alloc_num, int shuffle_sign) {
 	int sf = 5;
-	for (int S = 21; S >= 0; S--) { // S = 21
+	for (int S = G; S >= 0; S--) {
 		std::cout << "S=" << S << " " << std::flush;
 		for (int af = 256; af >= 1; af >>= 1) {
 			int rf = AF_RF_PRODUCT / af;
