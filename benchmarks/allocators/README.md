@@ -5,14 +5,10 @@ This is a group of programs attempting to reproduce the results found in
 "On Quantifying Allocation Strategies".
 
 These programs depend upon:
-  * Clang version 3.6 or later, or gcc version 5.1 or later, built with
-   support for link-time-optimization (LTO, see FAQ)
+  * Clang version 3.6 or later, or gcc version 5.1 or later
   * For clang, libc++ version 3.6, or later
-  * For gcc 5.1, libstdc++ patched according to:
-   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66055
   * [BDE Tools](https://github.com/bloomberg/bde-tools), which contains a
     custom build system based on [waf](https://github.com/waf-project/waf)
-  * If building for LTO, /usr/bin/ld indicating ld.gold
 
 A suitably-configured system can be built quickly using
 [Docker](https://docker.com); see the 'Docker' section below for instructions.
@@ -98,21 +94,4 @@ the command:
 ```
 docker run --rm -v //c/Users/gblea/Allocator-Benchmarks://src -w //src/benchmarks/allocators debian-stretch-clang make benchmark_1
 ```
-
-FAQ
-===
-Q1: What about tcmalloc?
-
-A1: In all our tests, tcmalloc was substantially slower than the default
-    new/delete on the target platform.
-
-Q2: Why do these depend on recent clang++/libc++ or g++/libstdc++?
-
-A2: The tests, particularly growth.cc and locality.cc, depend on features of
-  C++14: specifically, the containers' comprehensive observance of allocator-
-  traits requirements to direct their memory management.
-
-Q3: How can I build these with a non-LTO-enabled toolchain?
-
-A3: Comment out the ```LTO``` variable value in ```Makefile```.
     
