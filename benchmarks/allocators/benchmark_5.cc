@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 //#define DEBUG_V4
 
 #include <iostream>
@@ -35,34 +35,42 @@ const size_t RANDOM_DATA_POINTS = 1 << 16;
 const size_t RANDOM_LENGTH_MIN = 33;
 const size_t RANDOM_LENGTH_MAX = 1000;
 
+const size_t SUBSYSTEM_MEMORY_MAX = 1 << 10;
+const size_t SUBSYSTEM_COUNT = 1 << 16;
+
 
 alignas(long long) static char pool[1ull << 30];
 char random_data[RANDOM_SIZE];
 size_t random_positions[RANDOM_DATA_POINTS];
 size_t random_lengths[RANDOM_DATA_POINTS];
 
-// Setup Functions
-class DefaultSubsystem {
-public:
-	std::list<int> d_list;
-	DefaultSubsystem() : d_list() {}
-};
+size_t subsystem_sizes[SUBSYSTEM_COUNT];
+size_t subsystem_delete_indicies[SUBSYSTEM_COUNT];
 
-void create_subsystems(std::vector<std::list<int>> *vec)
+
+void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 {
-	size_t vector_size = 1 << 7;
-	size_t subsystem_size = 1 << 10;
-
-	vec->reserve(vector_size);
-	for (size_t i = 0; i < vector_size; i++) {
-		vec->emplace_back(); // Never deallocated because this forked process dies, so it is irrelevant
-		escape(&vec->back());
-		for (size_t j = 0; j < subsystem_size; j++)
-		{
-			vec->back().emplace_back((int)j);
-		}
-		escape(&vec->back()); // "Use" the subsystem to fool the optimizer
+	vec->reserve(SUBSYSTEM_COUNT);
+	escape(&vec->data());
+	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++) {
+		void * memory = operator new(subsystem_sizes[i]);
+		escape(memory);
+		vec->emplace_back(memory);
 	}
+
+	clobber();
+
+	for (size_t i = 0; i < dealloc_count; i++)
+	{
+		size_t delete_index = subsystem_delete_indicies[i]
+		delete vec[delete_index];
+		vec->erase(delete_index);
+	}
+
+	// Remaining memory is never deallocated, but this doesn't matter because this
+	// forked process dies after the benchmark finishes
+
+	clobber();
 }
 
 
@@ -71,6 +79,7 @@ void fill_random() {
 	std::uniform_int_distribution<char> char_distribution(CHAR_MIN, CHAR_MAX);
 	std::uniform_int_distribution<size_t> position_distribution(0, RANDOM_SIZE - RANDOM_LENGTH_MAX);
 	std::uniform_int_distribution<size_t> length_distribution(RANDOM_LENGTH_MIN, RANDOM_LENGTH_MAX);
+	std::uniform_int_distribution<size_t> subsystem_size_distribution(1, SUBSYSTEM_MEMORY_MAX);
 
 
 	for (size_t i = 0; i < RANDOM_SIZE; i++)
@@ -81,6 +90,15 @@ void fill_random() {
 	{
 		random_positions[i] = position_distribution(generator);
 		random_lengths[i] = length_distribution(generator);
+	}
+	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++)
+	{
+		subsystem_sizes[i] = subsystem_size_distribution(generator);
+	}
+	for (size_t i = SUBSYSTEM_COUNT - 1; i >= 0; i--)
+	{
+		std::uniform_int_distribution<size_t> subsystem_delete_index_distribution(0, i);
+		subsystem_delete_indicies[i] = subsystem_delete_index_distribution(generator);
 	}
 }
 
@@ -369,7 +387,7 @@ struct process_DS12 {
 
 
 template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
-static void run_base_allocations(unsigned long long iterations, size_t elements) {
+static void run_base_allocations(unsigned long long iterations, size_t elements, size_t dealloc_count) {
 	// TODO: 
 	// 1) Assert allocation size << sizeof(pool)
 	// 2) Does dereferencing container in "wink" sections in order to pass to processor have a negative effect?
@@ -390,8 +408,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<GLOBAL_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				GLOBAL_CONT container;
@@ -415,8 +433,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bslma::NewDeleteAllocator alloc;
@@ -442,8 +460,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
@@ -469,8 +487,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
@@ -496,8 +514,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
@@ -523,8 +541,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator  alloc(pool, sizeof(pool));
@@ -550,8 +568,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -577,8 +595,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -604,8 +622,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -631,8 +649,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::MultipoolAllocator alloc;
@@ -658,8 +676,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -686,8 +704,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -714,8 +732,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -742,8 +760,8 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<std::list<int>> vec;
-			create_subsystems(&vec);
+			std::vector<void *> vec;
+			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
@@ -765,7 +783,6 @@ static void run_base_allocations(unsigned long long iterations, size_t elements)
 }
 
 void run_base_loop(void(*func)(unsigned long long, size_t), std::string header) {
-	std::cout << header << std::endl;
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23;
@@ -775,15 +792,17 @@ void run_base_loop(void(*func)(unsigned long long, size_t), std::string header) 
 #endif // DEBUG
 
 
-	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
-		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-		func(iterations, elements);
+	for (size_t dealloc_denom = 1; dealloc_denom <= 8; dealloc_denom <<= 1) {
+		std::cout << header << " - Deallocating 1/" << dealloc_denom << " of subsystems" << std::endl;
+		for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
+			unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
+			std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
+			func(iterations, elements, SUBSYSTEM_COUNT/dealloc_denom);
+		}
 	}
 }
 
 void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header) {
-	std::cout << header << std::endl;
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23 - 7;
@@ -792,11 +811,13 @@ void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header
 	short max_element_iteration_product_exponent = 27 - 7;
 #endif // DEBUG
 
-
-	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
-		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-		func(iterations, elements);
+	for (size_t dealloc_denom = 1; dealloc_denom <= 8; dealloc_denom <<= 1) {
+		std::cout << header << " - Deallocating 1/" << dealloc_denom << " of subsystems"<< std::endl;
+		for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
+			unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
+			std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
+			func(iterations, elements, SUBSYSTEM_COUNT / dealloc_denom);
+		}
 	}
 }
 
