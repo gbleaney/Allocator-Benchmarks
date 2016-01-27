@@ -109,9 +109,9 @@ void fill_random() {
 	{
 		subsystem_sizes[i] = subsystem_size_distribution(generator);
 	}
-	for (int i = SUBSYSTEM_COUNT - 1; i >= 0; i--)
+	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++)
 	{
-		std::uniform_int_distribution<size_t> subsystem_delete_index_distribution(0, i);
+		std::uniform_int_distribution<size_t> subsystem_delete_index_distribution(0, SUBSYSTEM_COUNT - i - 1);
 		subsystem_delete_indicies[i] = subsystem_delete_index_distribution(generator);
 	}
 }
