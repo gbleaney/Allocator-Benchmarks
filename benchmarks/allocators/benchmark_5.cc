@@ -51,7 +51,7 @@ size_t subsystem_delete_indicies[SUBSYSTEM_COUNT];
 void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 {
 	vec->reserve(SUBSYSTEM_COUNT);
-	escape(&vec->data());
+	escape(vec->data());
 	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++) {
 		void * memory = operator new(subsystem_sizes[i]);
 		escape(memory);
@@ -62,9 +62,9 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 
 	for (size_t i = 0; i < dealloc_count; i++)
 	{
-		size_t delete_index = subsystem_delete_indicies[i]
+		size_t delete_index = subsystem_delete_indicies[i];
 		delete vec[delete_index];
-		vec->erase(delete_index);
+		vec->erase(vec->begin() + delete_index);
 	}
 
 	// Remaining memory is never deallocated, but this doesn't matter because this
@@ -95,7 +95,7 @@ void fill_random() {
 	{
 		subsystem_sizes[i] = subsystem_size_distribution(generator);
 	}
-	for (size_t i = SUBSYSTEM_COUNT - 1; i >= 0; i--)
+	for (int i = SUBSYSTEM_COUNT - 1; i >= 0; i--)
 	{
 		std::uniform_int_distribution<size_t> subsystem_delete_index_distribution(0, i);
 		subsystem_delete_indicies[i] = subsystem_delete_index_distribution(generator);
@@ -782,7 +782,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 	std::cout << std::endl;
 }
 
-void run_base_loop(void(*func)(unsigned long long, size_t), std::string header) {
+void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string header) {
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23;
@@ -802,7 +802,7 @@ void run_base_loop(void(*func)(unsigned long long, size_t), std::string header) 
 	}
 }
 
-void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header) {
+void run_nested_loop(void(*func)(unsigned long long, size_t, size_t), std::string header) {
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23 - 7;
