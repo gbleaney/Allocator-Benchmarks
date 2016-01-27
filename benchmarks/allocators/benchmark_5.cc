@@ -1,5 +1,6 @@
 #define DEBUG
-//#define DEBUG_V4
+
+#define DEBUG_V4
 
 #include <iostream>
 #include <iomanip>
@@ -50,8 +51,15 @@ size_t subsystem_delete_indicies[SUBSYSTEM_COUNT];
 
 void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 {
+#ifdef DEBUG_V4
+	std::cout << "Muddying global allocator";
+#endif
 	vec->reserve(SUBSYSTEM_COUNT);
 	escape(vec->data());
+
+#ifdef DEBUG_V4
+	std::cout << "Allocating " << SUBSYSTEM_COUNT << " chunks of memory";
+#endif
 	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++) {
 		void * memory = operator new(subsystem_sizes[i]);
 		escape(memory);
@@ -60,6 +68,9 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 
 	clobber();
 
+#ifdef DEBUG_V4
+	std::cout << "Deallocating " << dealloc_count << " chunks of memory";
+#endif
 	for (size_t i = 0; i < dealloc_count; i++)
 	{
 		size_t delete_index = subsystem_delete_indicies[i];
@@ -71,6 +82,9 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 	// forked process dies after the benchmark finishes
 
 	clobber();
+#ifdef DEBUG_V4
+	std::cout << "Done muddying global allocator";
+#endif
 }
 
 
