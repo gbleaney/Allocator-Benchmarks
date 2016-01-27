@@ -52,13 +52,13 @@ size_t subsystem_delete_indicies[SUBSYSTEM_COUNT];
 void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 {
 #ifdef DEBUG_V4
-	std::cout << "Muddying global allocator";
+	std::cout << "Muddying global allocator" << std::endl;
 #endif
 	vec->reserve(SUBSYSTEM_COUNT);
 	escape(vec->data());
 
 #ifdef DEBUG_V4
-	std::cout << "Allocating " << SUBSYSTEM_COUNT << " chunks of memory";
+	std::cout << "Allocating " << SUBSYSTEM_COUNT << " chunks of memory" << std::endl;
 #endif
 	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++) {
 		void * memory = operator new(subsystem_sizes[i]);
@@ -69,7 +69,7 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 	clobber();
 
 #ifdef DEBUG_V4
-	std::cout << "Deallocating " << dealloc_count << " chunks of memory";
+	std::cout << "Deallocating " << dealloc_count << " chunks of memory" << std::endl;
 #endif
 	for (size_t i = 0; i < dealloc_count; i++)
 	{
@@ -83,7 +83,7 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 
 	clobber();
 #ifdef DEBUG_V4
-	std::cout << "Done muddying global allocator";
+	std::cout << "Done muddying global allocator" << std::endl;
 #endif
 }
 
@@ -431,7 +431,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -457,7 +457,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -484,7 +484,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -511,7 +511,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -538,7 +538,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -565,7 +565,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -592,7 +592,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -619,7 +619,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -646,7 +646,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -673,7 +673,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -701,7 +701,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -729,7 +729,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -757,7 +757,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(&container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
@@ -785,7 +785,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 				processer(container, elements);
 			}
 			c_end = std::clock();
-			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " ";
+			std::cout << (c_end - c_start) * 1.0 / CLOCKS_PER_SEC << " " << std::flush;
 			exit(0);
 		}
 		else {
