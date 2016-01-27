@@ -49,7 +49,7 @@ size_t subsystem_sizes[SUBSYSTEM_COUNT];
 size_t subsystem_delete_indicies[SUBSYSTEM_COUNT];
 
 
-void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
+void muddy_global_allocator(std::vector<char *> *vec, size_t dealloc_count)
 {
 #ifdef DEBUG_V4
 	std::cout << "Muddying global allocator" << std::endl;
@@ -61,7 +61,7 @@ void muddy_global_allocator(std::vector<void *> *vec, size_t dealloc_count)
 	std::cout << "Allocating " << SUBSYSTEM_COUNT << " chunks of memory" << std::endl;
 #endif
 	for (size_t i = 0; i < SUBSYSTEM_COUNT; i++) {
-		void * memory = operator new(subsystem_sizes[i]);
+		char * memory = new char[subsystem_sizes[i]];
 		escape(memory);
 		vec->emplace_back(memory);
 	}
@@ -422,7 +422,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<GLOBAL_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -447,7 +447,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -474,7 +474,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -501,7 +501,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MONO_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -528,7 +528,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -555,7 +555,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -582,7 +582,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -609,7 +609,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -636,7 +636,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -663,7 +663,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -690,7 +690,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -718,7 +718,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<MULTI_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -746,7 +746,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
@@ -774,7 +774,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 		int pid = fork();
 		if (pid == 0) {
 			PROCESSER<POLY_CONT> processer;
-			std::vector<void *> vec;
+			std::vector<char *> vec;
 			muddy_global_allocator(&vec, dealloc_count);
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
