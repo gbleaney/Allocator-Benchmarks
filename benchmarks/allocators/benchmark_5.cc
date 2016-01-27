@@ -1,6 +1,5 @@
 #define DEBUG
-
-#define DEBUG_V4
+//#define DEBUG_V4
 
 #include <iostream>
 #include <iomanip>
