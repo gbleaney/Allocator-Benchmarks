@@ -74,7 +74,7 @@ void muddy_global_allocator(std::vector<char *> *vec, size_t dealloc_count)
 	for (size_t i = 0; i < dealloc_count; i++)
 	{
 		size_t delete_index = subsystem_delete_indicies[i];
-		std::iter_swap(vec->end(), vec->begin() + delete_index);
+		std::iter_swap(vec->end() - 1, vec->begin() + delete_index);
 		delete (*vec)[vec->size() - 1];
 		vec->pop_back();
 	}
