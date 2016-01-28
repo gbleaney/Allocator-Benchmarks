@@ -825,7 +825,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 	std::cout << std::endl;
 }
 
-void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string header) {
+void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string header, size_t scaling_factor) {
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23;
@@ -836,21 +836,21 @@ void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string 
 	std::cout << header << " - Same as benchmark 1" << std::endl;
 	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-		func(iterations, elements, 0);
+		std::cout << "Itr=" << iterations*scaling_factor << "=" << iterations << "*" << scaling_factor << " Elems=" << elements << " " << std::flush;
+		func(iterations*scaling_factor, elements, 0);
 	}
 
 	for (size_t dealloc_denom = 1; dealloc_denom <= 8; dealloc_denom <<= 1) {
 		std::cout << header << " - Deallocating 1/" << dealloc_denom << " of subsystems" << std::endl;
 		for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 			unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-			std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-			func(iterations, elements, SUBSYSTEM_COUNT/dealloc_denom);
+			std::cout << "Itr=" << iterations*scaling_factor << "=" << iterations << "*" << scaling_factor << " Elems=" << elements << " " << std::flush;
+			func(iterations*scaling_factor, elements, SUBSYSTEM_COUNT/dealloc_denom);
 		}
 	}
 }
 
-void run_nested_loop(void(*func)(unsigned long long, size_t, size_t), std::string header) {
+void run_nested_loop(void(*func)(unsigned long long, size_t, size_t), std::string header, size_t scaling_factor = 1) {
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23 - 7;
@@ -861,16 +861,16 @@ void run_nested_loop(void(*func)(unsigned long long, size_t, size_t), std::strin
 	std::cout << header << " - Same as benchmark 1" << std::endl;
 	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-		func(iterations, elements, 0);
+		std::cout << "Itr=" << iterations*scaling_factor << "=" << iterations << "*" << scaling_factor << " Elems=" << elements << " " << std::flush;
+		func(iterations*scaling_factor, elements, 0);
 	}
 
 	for (size_t dealloc_denom = 1; dealloc_denom <= 8; dealloc_denom <<= 1) {
 		std::cout << header << " - Deallocating 1 / " << dealloc_denom << " of subsystems"<< std::endl;
 		for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 			unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
-			std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
-			func(iterations, elements, SUBSYSTEM_COUNT / dealloc_denom);
+			std::cout << "Itr=" << iterations*scaling_factor << "=" << iterations << "*" << scaling_factor << " Elems=" << elements << " " << std::flush;
+			func(iterations*scaling_factor, elements, SUBSYSTEM_COUNT / dealloc_denom);
 		}
 	}
 }
@@ -886,17 +886,17 @@ int main(int argc, char *argv[]) {
 		typename combined_containers::DS1_mono,
 		typename combined_containers::DS1_multi,
 		typename combined_containers::DS1_poly,
-		process_DS1>, "**DS1**");
+		process_DS1>, "**DS1**", 100);
 	run_base_loop(&run_base_allocations<typename containers::DS2,
 		typename combined_containers::DS2_mono,
 		typename combined_containers::DS2_multi,
 		typename combined_containers::DS2_poly,
-		process_DS2>, "**DS2**");
+		process_DS2>, "**DS2**", 2);
 	run_base_loop(&run_base_allocations<typename containers::DS3,
 		typename combined_containers::DS3_mono,
 		typename combined_containers::DS3_multi,
 		typename combined_containers::DS3_poly,
-		process_DS3>, "**DS3**");
+		process_DS3>, "**DS3**", 3);
 	run_base_loop(&run_base_allocations<typename containers::DS4,
 		typename combined_containers::DS4_mono,
 		typename combined_containers::DS4_multi,
@@ -906,7 +906,7 @@ int main(int argc, char *argv[]) {
 		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
 		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
 		typename alloc_containers::DS5<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-		process_DS5>, "**DS5**");
+		process_DS5>, "**DS5**", 50);
 	run_nested_loop(&run_base_allocations<typename containers::DS6,
 		typename alloc_containers::DS6<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS6<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
@@ -916,7 +916,7 @@ int main(int argc, char *argv[]) {
 		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_mono>::monotonic, alloc_adaptors<int>::monotonic>,
 		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_multi>::multipool, alloc_adaptors<int>::multipool>,
 		typename alloc_containers::DS7<alloc_adaptors<combined_containers::DS3_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-		process_DS7>, "**DS7**");
+		process_DS7>, "**DS7**", 2);
 	run_nested_loop(&run_base_allocations<typename containers::DS8,
 		typename alloc_containers::DS8<string::monotonic, alloc_adaptors<combined_containers::DS4_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS8<string::multipool, alloc_adaptors<combined_containers::DS4_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
@@ -926,7 +926,7 @@ int main(int argc, char *argv[]) {
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-		process_DS9>, "**DS9**");
+		process_DS9>, "**DS9**", 2);
 	run_nested_loop(&run_base_allocations<typename containers::DS10,
 		typename alloc_containers::DS10<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS10<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
