@@ -825,7 +825,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 	std::cout << std::endl;
 }
 
-void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string header, size_t scaling_factor) {
+void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string header, size_t scaling_factor = 1) {
 #ifdef DEBUG
 	short max_element_exponent = 16;
 	short max_element_iteration_product_exponent = 23;
