@@ -8,6 +8,7 @@
 #include <iterator>
 #include <functional>
 #include <ctime>
+#include <algorithm>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,8 +74,9 @@ void muddy_global_allocator(std::vector<char *> *vec, size_t dealloc_count)
 	for (size_t i = 0; i < dealloc_count; i++)
 	{
 		size_t delete_index = subsystem_delete_indicies[i];
-		delete (*vec)[delete_index];
-		vec->erase(vec->begin() + delete_index);
+		std::iter_swap(vec->end(), vec->begin() + delete_index);
+		delete vec->end();
+		vec->pop_back();
 	}
 
 	// Remaining memory is never deallocated, but this doesn't matter because this
