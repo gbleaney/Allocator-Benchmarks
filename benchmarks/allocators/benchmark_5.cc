@@ -926,7 +926,7 @@ int main(int argc, char *argv[]) {
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_mono>::monotonic, alloc_adaptors<int>::monotonic>,
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_multi>::multipool, alloc_adaptors<int>::multipool>,
 		typename alloc_containers::DS9<alloc_adaptors<combined_containers::DS1_poly>::polymorphic, alloc_adaptors<int>::polymorphic>,
-		process_DS9>, "**DS9**", 2);
+		process_DS9>, "**DS9**", 30);
 	run_nested_loop(&run_base_allocations<typename containers::DS10,
 		typename alloc_containers::DS10<string::monotonic, alloc_adaptors<combined_containers::DS2_mono>::monotonic, alloc_adaptors<string::monotonic>::monotonic>,
 		typename alloc_containers::DS10<string::multipool, alloc_adaptors<combined_containers::DS2_multi>::multipool, alloc_adaptors<string::multipool>::multipool>,
