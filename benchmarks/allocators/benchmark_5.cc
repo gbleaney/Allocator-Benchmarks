@@ -841,7 +841,7 @@ void run_base_loop(void(*func)(unsigned long long, size_t, size_t), std::string 
 	}
 
 	for (size_t dealloc_denom = 1; dealloc_denom <= 8; dealloc_denom <<= 1) {
-		std::cout << header << " - Deallocating 1/" << dealloc_denom << " of subsystems" << std::endl;
+		std::cout << header << " - Deallocating 1 / " << dealloc_denom << " of subsystems" << std::endl;
 		for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 			unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
 			std::cout << "Itr=" << iterations*scaling_factor << "=" << iterations << "*" << scaling_factor << " Elems=" << elements << " " << std::flush;
