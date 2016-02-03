@@ -76,7 +76,7 @@ void run_allocation(const unsigned long long T_bytes, const unsigned long long A
 	}
 }
 
-void run_row(size_t T, size_t A, size_t S) {
+void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 	// T = Total amount of memory to be allocated (power of 2)
 	// A = Active memory - maximum amount of memory to be allocated at a time (power of 2)
 	// S = Size in bytes of chunk to be allocated (power of 2)
@@ -102,67 +102,91 @@ void run_row(size_t T, size_t A, size_t S) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS1" << std::endl;
 #endif // DEBUG_V2
-				std::allocator<char> alloc;
-				run_allocation<std::allocator<char>>(expanded_T, expanded_A, expanded_S, alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					std::allocator<char> alloc;
+					run_allocation<std::allocator<char>>(expanded_T, expanded_A, expanded_S, alloc);
+					break;
+				}
 			}
 			case 1: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS2" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bslma::NewDeleteAllocator alloc;
-				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bslma::NewDeleteAllocator alloc;
+					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 2: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS3" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-				run_allocation<typename alloc_adaptors<char>::monotonic>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+					run_allocation<typename alloc_adaptors<char>::monotonic>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 3: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS5" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 4: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS7" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::MultipoolAllocator alloc;
+					run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 5: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS9" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::MultipoolAllocator alloc;
-				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::MultipoolAllocator alloc;
+					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 6: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS11" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+					run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			case 7: {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS13" << std::endl;
 #endif // DEBUG_V2
-				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-				run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
-				break;
+				for (size_t i = 0; i < repeat; i++)
+				{
+					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
+					break;
+				}
 			}
 			default:
 				break;
@@ -184,19 +208,19 @@ void run_row(size_t T, size_t A, size_t S) {
 	std::cout << std::endl;
 }
 
-void run_table(size_t T) {
+void run_table(size_t T, size_t repeat = 1) {
 	std::cout << std::endl << "Running table of memory size 2^" << T << " bytes" << std::endl;
-	run_row(T, 15, 10);
-	run_row(T, 16, 10);
-	run_row(T, 17, 10);
-	run_row(T, 18, 10);
-	run_row(T, 19, 10);
-	run_row(T, 20, 10);
-	run_row(T, 20, 11);
-	run_row(T, 20, 12);
-	run_row(T, 20, 13);
-	run_row(T, 20, 14);
-	run_row(T, 20, 15);
+	run_row(T, 15, 10, repeat);
+	run_row(T, 16, 10, repeat);
+	run_row(T, 17, 10, repeat);
+	run_row(T, 18, 10, repeat);
+	run_row(T, 19, 10, repeat);
+	run_row(T, 20, 10, repeat);
+	run_row(T, 20, 11, repeat);
+	run_row(T, 20, 12, repeat);
+	run_row(T, 20, 13, repeat);
+	run_row(T, 20, 14, repeat);
+	run_row(T, 20, 15, repeat);
 }
 
 int main(int argc, char *argv[]) {
@@ -204,12 +228,12 @@ int main(int argc, char *argv[]) {
 	// 1) Providing pre-allocated pool to monotonic - best size? Does it even make sense?
 	std::cout << "Started" << std::endl;
 	
-	run_table(30);
-	run_table(31);
-	run_table(32);
-	run_table(33);
-	run_table(34);
-	run_table(35);
+	run_table(30, 100);
+	run_table(31, 100);
+	run_table(32, 100);
+	run_table(33, 100);
+	run_table(34, 100);
+	run_table(35, 100);
 
 	std::cout << "Done" << std::endl;
 }
