@@ -102,7 +102,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS1" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					std::allocator<char> alloc;
 					run_allocation<std::allocator<char>>(expanded_T, expanded_A, expanded_S, alloc);
@@ -113,7 +113,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS2" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bslma::NewDeleteAllocator alloc;
 					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
@@ -124,7 +124,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS3" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
 					run_allocation<typename alloc_adaptors<char>::monotonic>(expanded_T, expanded_A, expanded_S, &alloc);
@@ -135,7 +135,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS5" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
 					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
@@ -146,7 +146,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS7" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::MultipoolAllocator alloc;
 					run_allocation<typename alloc_adaptors<char>::multipool>(expanded_T, expanded_A, expanded_S, &alloc);
@@ -157,7 +157,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS9" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::MultipoolAllocator alloc;
 					run_allocation<typename alloc_adaptors<char>::polymorphic>(expanded_T, expanded_A, expanded_S, &alloc);
@@ -168,7 +168,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS11" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
 					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
@@ -180,7 +180,7 @@ void run_row(size_t T, size_t A, size_t S, size_t repeat = 1) {
 #ifdef DEBUG_V2
 				std::cout << std::endl << "AS13" << std::endl;
 #endif // DEBUG_V2
-				for (size_t i = 0; i < repeat; i++)
+				for (size_t j = 0; j < repeat; j++)
 				{
 					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
 					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
