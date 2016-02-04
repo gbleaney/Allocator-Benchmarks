@@ -41,7 +41,7 @@ void run_allocation(const unsigned long long N_expanded, const unsigned long lon
 
 }
 
-void run_row(size_t N, size_t S, size_t W) {
+void run_row(size_t N, size_t S, size_t W, size_t repeat = 1) {
 	// N = Number of iterations (power of 2)
 	// S = Chunk size parameter - size in bytes of memory to be allocated (power of 2)
 	// W = Number of active threads
@@ -68,66 +68,90 @@ void run_row(size_t N, size_t S, size_t W) {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS1" << std::endl;
 #endif // DEBUG_V3
-					std::allocator<char> alloc;
-					run_allocation<std::allocator<char>>(N_expanded, S_expanded, alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						std::allocator<char> alloc;
+						run_allocation<std::allocator<char>>(N_expanded, S_expanded, alloc, thread);
+					}
 					break;
 				}
 				case 1: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS2" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bslma::NewDeleteAllocator alloc;
-					run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bslma::NewDeleteAllocator alloc;
+						run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 2: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS3" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-					run_allocation<typename alloc_adaptors<char>::monotonic>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+						run_allocation<typename alloc_adaptors<char>::monotonic>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 3: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS5" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
-					run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::BufferedSequentialAllocator alloc(pool, sizeof(pool));
+						run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 4: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS7" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::MultipoolAllocator alloc;
-					run_allocation<typename alloc_adaptors<char>::multipool>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::MultipoolAllocator alloc;
+						run_allocation<typename alloc_adaptors<char>::multipool>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 5: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS9" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::MultipoolAllocator alloc;
-					run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::MultipoolAllocator alloc;
+						run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 6: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS11" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-					run_allocation<typename alloc_adaptors<char>::multipool>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+						BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+						run_allocation<typename alloc_adaptors<char>::multipool>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				case 7: {
 #ifdef DEBUG_V3
 					std::cout << std::endl << "AS13" << std::endl;
 #endif // DEBUG_V3
-					BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-					BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
-					run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					for (size_t j = 0; j < repeat; j++)
+					{
+						BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
+						BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+						run_allocation<typename alloc_adaptors<char>::polymorphic>(N_expanded, S_expanded, &alloc, thread);
+					}
 					break;
 				}
 				default:
@@ -167,7 +191,7 @@ void run_row(size_t N, size_t S, size_t W) {
 	std::cout << std::endl;
 }
 
-void run_table(size_t N, size_t S) {
+void run_table(size_t N, size_t S, size_t repeat) {
 	std::cout << std::endl << "Running table of 2^" << N << " (N) iterations and 2^" << S << " (S) bytes." << std::endl;
 #ifdef DEBUG
 	size_t max_num_threads = 1;
@@ -176,7 +200,7 @@ void run_table(size_t N, size_t S) {
 #endif // DEBUG
 
 	for (size_t W = 1; W <= max_num_threads; W++) {
-		run_row(N, S, W);
+		run_row(N, S, W, repeat);
 	}
 }
 
@@ -188,13 +212,13 @@ int main(int argc, char *argv[]) {
 	//    
 	std::cout << "Started" << std::endl;
 
-	run_table(15, 6);
-	run_table(15, 7);
-	run_table(15, 8);
-	run_table(16, 8);
-	run_table(17, 8);
-	run_table(18, 8);
-	run_table(19, 8);
+	run_table(15, 6, 100);
+	run_table(15, 7, 100);
+	run_table(15, 8, 100);
+	run_table(16, 8, 100);
+	run_table(17, 8, 100);
+	run_table(18, 8, 100);
+	run_table(19, 8, 100);
 
 	std::cout << "Done" << std::endl;
 }
