@@ -37,6 +37,31 @@ void clobber()
 	asm volatile("" : : : "memory");
 }
 
+// TODO will this hashing algorithm cause issues? Maybe just a singleton counter?
+size_t hash_value = 0;
+template <typename T>
+struct hash {
+	typedef std::size_t result_type;
+	typedef T argument_type;
+	result_type operator()(T const& obj) const {
+#ifdef DEBUG_V4
+		std::cout << "Hashing " << typeid(T).name() << " to value " << hash_value << std::endl;
+#endif
+		return hash_value++;
+	}
+};
+
+template <typename T>
+struct equal {
+	bool operator()(T const& t, T const& u) const
+	{
+#ifdef DEBUG_V4
+		std::cout << "Comparing " << typeid(T).name() << std::endl;
+#endif
+		return &t == &u;
+	}
+};
+
 
 template <typename T, typename ALLOC>
 struct alloc_adaptor {

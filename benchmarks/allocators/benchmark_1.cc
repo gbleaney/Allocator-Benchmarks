@@ -60,29 +60,7 @@ void fill_random() {
 }
 
 
-// TODO will this hashing algorithm cause issues? Maybe just a singleton counter?
-
-size_t hash_value = 0;
-template <typename T>
-struct hash {
-	typedef std::size_t result_type;
-	typedef T argument_type;
-	result_type operator()(T obj) const { return hash_value++; }
-};
-
-template <typename T>
-struct equal {
-	bool operator()(T const& t, T const& u) const
-	{
-#ifdef DEBUG_V4
-		std::cout << "Comparing " << typeid(T).name() << std::endl;
-#endif
-		return &t == &u;
-	}
-};
-
 // Convenience Typedefs
-
 struct string {
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::monotonic> monotonic;
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::multipool> multipool;

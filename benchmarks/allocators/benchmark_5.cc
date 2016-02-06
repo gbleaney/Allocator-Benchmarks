@@ -117,30 +117,7 @@ void fill_random() {
 	}
 }
 
-
-// TODO will this hashing algorithm cause issues? Maybe just a singleton counter?
-
-size_t hash_value = 0;
-template <typename T>
-struct hash {
-	typedef std::size_t result_type;
-	typedef T argument_type;
-	result_type operator()(T obj) const { return hash_value++; }
-};
-
-template <typename T>
-struct equal {
-	bool operator()(T const& t, T const& u) const
-	{
-#ifdef DEBUG_V4
-		std::cout << "Comparing " << typeid(T).name() << std::endl;
-#endif
-		return &t == &u;
-	}
-};
-
 // Convenience Typedefs
-
 struct string {
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::monotonic> monotonic;
 	typedef std::basic_string<char, std::char_traits<char>, alloc_adaptors<char>::multipool> multipool;
@@ -337,7 +314,6 @@ struct process_DS9 {
 			}
 
 			auto pair = ds9->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds9->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -356,7 +332,6 @@ struct process_DS10 {
 			}
 
 			auto pair = ds10->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds10->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -375,7 +350,6 @@ struct process_DS11 {
 			}
 
 			auto pair = ds11->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds11->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -394,7 +368,6 @@ struct process_DS12 {
 			}
 
 			auto pair = ds12->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds12->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -404,11 +377,6 @@ struct process_DS12 {
 template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
 static void run_base_allocations(unsigned long long iterations, size_t elements, size_t dealloc_count) {
 	// TODO: 
-	// 1) Assert allocation size << sizeof(pool)
-	// 2) Does dereferencing container in "wink" sections in order to pass to processor have a negative effect?
-	// 3) Does switching from buffered sequential allocator to pool make any differance?
-	// 4) Is it really fair that, monotonic has one big chunk handed to it, but multipool grows organically?
-	// 5) What is the point of backing a monotonic with a multipool if we already supply it with enough initial memory?
 	// 6) For DS9-12, inner containers must be constructed and then passed in (thus incuring the copy/move cost) because contents of a set can't be modified
 
 	std::clock_t c_start;
@@ -718,7 +686,7 @@ static void run_base_allocations(unsigned long long iterations, size_t elements,
 			c_start = std::clock();
 			for (unsigned long long i = 0; i < iterations; i++) {
 				BloombergLP::bdlma::BufferedSequentialAllocator underlying_alloc(pool, sizeof(pool));
-				BloombergLP::bdlma::MultipoolAllocator  alloc(&underlying_alloc);
+				BloombergLP::bdlma::MultipoolAllocator alloc(&underlying_alloc);
 				MULTI_CONT container(&alloc);
 				container.reserve(elements);
 				processer(&container, elements);
