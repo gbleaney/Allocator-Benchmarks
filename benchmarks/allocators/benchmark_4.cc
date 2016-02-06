@@ -206,10 +206,9 @@ void run_table(size_t N, size_t S, size_t repeat) {
 
 int main(int argc, char *argv[]) {
 	//TODO:
-	// 1) Providing pre-allocated pool to monotonic - best size? Does it even make sense?
 	// 2) Regardless of multithreading, we are biasing heavily toward multipool becaue of it's use of the free list.
 	//    Looking at the paper, as we add more threads, the gap between multipool and default closes, implying that 
-	//    
+
 	std::cout << "Started" << std::endl;
 
 	run_table(15, 6, 100);

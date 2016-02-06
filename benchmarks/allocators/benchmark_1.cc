@@ -279,7 +279,6 @@ struct process_DS9 {
 			}
 
 			auto pair = ds9->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds9->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -298,7 +297,6 @@ struct process_DS10 {
 			}
 
 			auto pair = ds10->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds10->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -317,7 +315,6 @@ struct process_DS11 {
 			}
 
 			auto pair = ds11->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds11->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -336,7 +333,6 @@ struct process_DS12 {
 			}
 
 			auto pair = ds12->emplace(std::move(inner)); // Pair of iterator to element and success
-			assert(ds12->size() == i + 1); // TODO remove
 		}
 		clobber();
 	}
@@ -346,11 +342,6 @@ struct process_DS12 {
 template<typename GLOBAL_CONT, typename MONO_CONT, typename MULTI_CONT, typename POLY_CONT, template<typename CONT> class PROCESSER>
 static void run_base_allocations(unsigned long long iterations, size_t elements) {
 	// TODO: 
-	// 1) Assert allocation size << sizeof(pool)
-	// 2) Does dereferencing container in "wink" sections in order to pass to processor have a negative effect?
-	// 3) Does switching from buffered sequential allocator to pool make any differance?
-	// 4) Is it really fair that, monotonic has one big chunk handed to it, but multipool grows organically?
-	// 5) What is the point of backing a monotonic with a multipool if we already supply it with enough initial memory?
 	// 6) For DS9-12, inner containers must be constructed and then passed in (thus incuring the copy/move cost) because contents of a set can't be modified
 
 	std::clock_t c_start;
@@ -739,7 +730,7 @@ void run_nested_loop(void(*func)(unsigned long long, size_t), std::string header
 #endif // DEBUG
 
 
-	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) { // TODO: 6
+	for (unsigned long long elements = 1ull << 6; elements <= 1ull << max_element_exponent; elements <<= 1) {
 		unsigned long long iterations = (1ull << max_element_iteration_product_exponent) / elements;
 		std::cout << "Itr=" << iterations << " Elems=" << elements << " " << std::flush;
 		func(iterations, elements);

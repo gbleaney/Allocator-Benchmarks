@@ -200,8 +200,6 @@ void run_table(size_t T) {
 }
 
 int main(int argc, char *argv[]) {
-	//TODO:
-	// 1) Providing pre-allocated pool to monotonic - best size? Does it even make sense?
 	std::cout << "Started" << std::endl;
 	
 	run_table(30);

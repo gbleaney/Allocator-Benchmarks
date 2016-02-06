@@ -75,7 +75,7 @@ double access_lists(VECTOR *vec, int af, int rf) {
 				for (auto it = (*vec)[i]->d_list.begin(); it != (*vec)[i]->d_list.end(); ++it) {
 					(*it)++; // Increment int to cause loop to have some effect
 				}
-				clobber(); // TODO will this hurt caching?
+				clobber();
 			}
 		}
 	}
@@ -237,8 +237,7 @@ void generate_table(int G, int alloc_num, int shuffle_sign) {
 
 int main(int argc, char *argv[]) {
 	// TODO: Notes:
-	// 1) Incremented int by 1 on each iteration of af, to prevent compiler optimizing away loop (also used Chandler's
-	//    optimizer-defeating functions to access the ints after each iteration -- could this be a problem with caching?)
+	// 1) Incremented int by 1 on each iteration of af, to prevent compiler optimizing away loop
 	// 2) Couldn't follow paper exactly, because popping off subsystems iteratively (then pushing randmonly) means that on
 	//    2nd (and further) iterations through the list, some subsystems will not have an element to pop.
 
