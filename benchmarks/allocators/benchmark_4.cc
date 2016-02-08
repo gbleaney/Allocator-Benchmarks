@@ -167,6 +167,7 @@ void run_row(size_t N, size_t S, size_t W, size_t repeat = 1) {
 			std::cout << "Finished waiting on process" << std::endl;
 #endif // DEBUG_V1
 			if (error) {
+				std::cout << "Error: " << error << std::endl;
 				break;
 			}
 		}
@@ -192,7 +193,7 @@ void run_row(size_t N, size_t S, size_t W, size_t repeat = 1) {
 }
 
 void run_table(size_t N, size_t S, size_t repeat) {
-	std::cout << std::endl << "Running table of 2^" << N << " (N) iterations and 2^" << S << " (S) bytes." << std::endl;
+	std::cout << std::endl << "Running table of 2^" << N << " (N) iterations and 2^" << S << " (S) bytes with " << repeat << " repeats" << std::endl;
 #ifdef DEBUG
 	size_t max_num_threads = 1;
 #else
